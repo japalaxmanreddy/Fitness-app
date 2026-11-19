@@ -14,7 +14,7 @@ import {
 import { prescribedSets } from "./log.ts";
 import { ANIM_KEYS, ANIMS, animFor } from "./motion.ts";
 import { normalize } from "./storage.ts";
-import { youtubeId } from "./youtube-id.ts";
+import { thumbnailUrl, watchUrl, youtubeId } from "./youtube-id.ts";
 
 describe("daily targets", () => {
   it("uses Mifflin-St Jeor, the activity factor, and a 500 calorie cut", () => {
@@ -127,10 +127,14 @@ describe("logging helpers", () => {
 });
 
 describe("youtube slots", () => {
-  it("reads a video id for the nocookie embed", () => {
+  it("turns a video link into a normal watch URL and a thumbnail", () => {
     assert.equal(youtubeId(""), null);
     assert.equal(youtubeId("https://www.youtube.com/watch?v=abc123XYZ_0"), "abc123XYZ_0");
     assert.equal(youtubeId("https://youtu.be/abc123XYZ_0"), "abc123XYZ_0");
     assert.equal(youtubeId("https://www.youtube.com/embed/abc123XYZ_0"), "abc123XYZ_0");
+    assert.equal(watchUrl("https://youtu.be/abc123XYZ_0"), "https://www.youtube.com/watch?v=abc123XYZ_0");
+    assert.equal(watchUrl("https://www.youtube.com/watch?v=hFD8CIQM3GU"), "https://www.youtube.com/watch?v=hFD8CIQM3GU");
+    assert.equal(thumbnailUrl("https://www.youtube.com/watch?v=hFD8CIQM3GU"), "https://i.ytimg.com/vi/hFD8CIQM3GU/hqdefault.jpg");
+    assert.equal(thumbnailUrl(""), null);
   });
 });
