@@ -15,7 +15,7 @@ https://japalaxmanreddy.github.io/Fitness-app/
 - An 18-week weight chart from 195 lb to 177 lb, with your weigh-ins on the same graph.
 - JSON export and import. There is no account and no server.
 
-Each exercise and stretch has a `videoUrl` field. Leave it empty until you have a link you want. A YouTube link shows a Watch how-to button and, when the link is a YouTube URL, a `youtube-nocookie` embed.
+Each exercise and stretch has a `videoUrl`. Those links open a Watch how-to button and a `youtube-nocookie` embed.
 
 ## iPhone
 

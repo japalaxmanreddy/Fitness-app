@@ -61,7 +61,7 @@ export function Exercises() {
           ]}
         />
       </section>
-      <HowTo url={current.videoUrl} title={current.name} />
+      <HowTo url={current.videoUrl} title={current.name} site={current.videoSite} />
       <section className="card stack">
         <h2>Log this exercise</h2>
         <SessionLogger

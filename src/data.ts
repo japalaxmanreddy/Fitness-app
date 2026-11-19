@@ -9,6 +9,7 @@ export type Exercise = {
   cue: string;
   arm: string;
   videoUrl: string;
+  videoSite: string;
 };
 
 export type Stretch = {
@@ -16,6 +17,7 @@ export type Stretch = {
   hold: string;
   cue: string;
   videoUrl: string;
+  videoSite: string;
 };
 
 export type PlanDay = {
@@ -26,44 +28,44 @@ export type PlanDay = {
 export const GROUPS: Group[] = ["All", "Legs", "Push", "Pull", "Core", "Cardio"];
 
 export const LIB: Exercise[] = [
-  { name: "Goblet squat", group: "Legs", muscles: "Quads, glutes", cue: "Hold one dumbbell vertically at chest, sit down between heels, chest up.", arm: "Cup the top plate with both palms instead of gripping hard.", videoUrl: "" },
-  { name: "Bulgarian split squat", group: "Legs", muscles: "Quads, glutes", cue: "Back foot on bench, drop back knee straight down, front heel planted.", arm: "Start bodyweight; add light dumbbells held at sides.", videoUrl: "" },
-  { name: "Dumbbell Romanian deadlift", group: "Legs", muscles: "Hamstrings, glutes", cue: "Soft knees, push hips back, dumbbells slide down thighs, flat back.", arm: "Neutral grip; use straps later if grip limits you.", videoUrl: "" },
-  { name: "Step-up onto bench", group: "Legs", muscles: "Quads, glutes", cue: "Whole foot on the bench, drive through that heel, lower slowly for 3 seconds.", arm: "Dumbbells at sides; go lighter on the left if grip tires.", videoUrl: "" },
-  { name: "Single-leg Romanian deadlift", group: "Legs", muscles: "Hamstrings, glutes, balance", cue: "Hinge on one leg, the other leg reaches back, hips stay square.", arm: "Hold the dumbbell in the right hand at first, or touch the bench with the left for balance.", videoUrl: "" },
-  { name: "Hip thrust on bench", group: "Legs", muscles: "Glutes", cue: "Upper back on bench, dumbbell on hips, drive up and squeeze 1 second.", arm: "Rest the dumbbell on hips; hands only steady it.", videoUrl: "" },
-  { name: "Neutral-grip dumbbell bench press", group: "Push", muscles: "Chest, triceps", cue: "Palms facing each other, lower to mid-chest, press up and slightly in.", arm: "Neutral grip keeps the wrist straight. Stop if the plate area aches.", videoUrl: "" },
-  { name: "Incline dumbbell press", group: "Push", muscles: "Upper chest, shoulders", cue: "Bench at about 30 degrees, elbows at 45 degrees from the body.", arm: "Neutral grip, wrists stacked over elbows.", videoUrl: "" },
-  { name: "Seated dumbbell shoulder press", group: "Push", muscles: "Shoulders", cue: "Bench upright, press overhead without arching the low back.", arm: "Neutral grip; go light at first.", videoUrl: "" },
-  { name: "Incline push-up on dumbbell handles", group: "Push", muscles: "Chest, triceps", cue: "Hands on dumbbells resting on the bench, body in a straight line.", arm: "Holding handles keeps the wrist straight instead of bent back on a flat palm.", videoUrl: "" },
-  { name: "Chest-supported dumbbell row", group: "Pull", muscles: "Upper back, lats", cue: "Lie face down on incline bench, pull elbows back to hips.", arm: "Neutral grip; the bench removes lower-back strain.", videoUrl: "" },
-  { name: "One-arm dumbbell row", group: "Pull", muscles: "Lats, upper back", cue: "Knee and hand on bench, pull dumbbell to hip, no twisting.", arm: "When the left arm braces on the bench, use a fist or forearm if a flat palm bothers it.", videoUrl: "" },
-  { name: "Rear-delt fly", group: "Pull", muscles: "Rear shoulders", cue: "Chest on incline bench, raise light dumbbells out wide.", arm: "Use the 5 to 10 lb kettlebells or light dumbbells.", videoUrl: "" },
-  { name: "Hammer curl", group: "Pull", muscles: "Biceps, forearms", cue: "Palms facing in, curl without swinging.", arm: "Builds the forearm gently. Start light on the left side.", videoUrl: "" },
-  { name: "Dead bug", group: "Core", muscles: "Deep core", cue: "Low back pressed down, extend opposite arm and leg slowly.", arm: "No load on the forearm.", videoUrl: "" },
-  { name: "Side plank on forearm", group: "Core", muscles: "Obliques", cue: "Elbow under shoulder, hips high, straight line head to feet.", arm: "Weight rests on the elbow and forearm bone, not the wrist.", videoUrl: "" },
-  { name: "Kettlebell suitcase carry", group: "Core", muscles: "Core, grip", cue: "One 10 to 15 lb kettlebell at your side, walk tall for 30 to 40 seconds.", arm: "Good gentle grip work. Start with 10 lb on the left side.", videoUrl: "" },
-  { name: "Leg press (gym)", group: "Legs", muscles: "Quads, glutes", cue: "Feet shoulder-width, lower until knees near 90 degrees, don't lock out hard.", arm: "No grip load. Your main heavy leg lift in the gym.", videoUrl: "" },
-  { name: "Leg curl machine (gym)", group: "Legs", muscles: "Hamstrings", cue: "Curl smoothly, 2 seconds back.", arm: "No grip load.", videoUrl: "" },
-  { name: "Machine chest press (gym)", group: "Push", muscles: "Chest, triceps", cue: "Handles at mid-chest, press without shrugging.", arm: "Pick neutral handles if the machine has them.", videoUrl: "" },
-  { name: "Triceps rope pushdown (gym)", group: "Push", muscles: "Triceps", cue: "Elbows pinned, spread the rope at the bottom.", arm: "Rope keeps the wrist neutral.", videoUrl: "" },
-  { name: "Lat pulldown, neutral grip (gym)", group: "Pull", muscles: "Lats", cue: "Pull the handle to upper chest, chest up.", arm: "Use wrist straps once the weight gets heavy.", videoUrl: "" },
-  { name: "Seated cable row (gym)", group: "Pull", muscles: "Mid back", cue: "Sit tall, pull to the belly, squeeze shoulder blades.", arm: "Neutral V-handle.", videoUrl: "" },
-  { name: "Cable face pull (gym)", group: "Pull", muscles: "Rear shoulders, upper back", cue: "Rope at face height, pull to forehead, elbows high.", arm: "Light load, easy on the wrist.", videoUrl: "" },
-  { name: "Pallof press (gym)", group: "Core", muscles: "Core, anti-rotation", cue: "Stand sideways to cable, press straight out, resist the twist.", arm: "Light load.", videoUrl: "" },
-  { name: "Bike, steady", group: "Cardio", muscles: "Heart, legs", cue: "20 to 40 minutes at a pace where you can still talk in full sentences.", arm: "No arm load.", videoUrl: "" },
-  { name: "Bike, intervals", group: "Cardio", muscles: "Heart, legs", cue: "After warm-up, 30 seconds hard and 90 seconds easy, 6 to 8 rounds.", arm: "No arm load.", videoUrl: "" },
+  { name: "Goblet squat", group: "Legs", muscles: "Quads, glutes", cue: "Hold one dumbbell vertically at chest, sit down between heels, chest up.", arm: "Cup the top plate with both palms instead of gripping hard.", videoUrl: "https://www.youtube.com/watch?v=hFD8CIQM3GU", videoSite: "Mind Pump" },
+  { name: "Bulgarian split squat", group: "Legs", muscles: "Quads, glutes", cue: "Back foot on bench, drop back knee straight down, front heel planted.", arm: "Start bodyweight; add light dumbbells held at sides.", videoUrl: "https://www.youtube.com/watch?v=kkdmHTASZg8", videoSite: "Squat University" },
+  { name: "Dumbbell Romanian deadlift", group: "Legs", muscles: "Hamstrings, glutes", cue: "Soft knees, push hips back, dumbbells slide down thighs, flat back.", arm: "Neutral grip; use straps later if grip limits you.", videoUrl: "https://www.youtube.com/watch?v=_oyxCn2iSjU", videoSite: "Jeff Nippard" },
+  { name: "Step-up onto bench", group: "Legs", muscles: "Quads, glutes", cue: "Whole foot on the bench, drive through that heel, lower slowly for 3 seconds.", arm: "Dumbbells at sides; go lighter on the left if grip tires.", videoUrl: "https://www.youtube.com/watch?v=7AtIjR-QqVA", videoSite: "Bodybuilding.com" },
+  { name: "Single-leg Romanian deadlift", group: "Legs", muscles: "Hamstrings, glutes, balance", cue: "Hinge on one leg, the other leg reaches back, hips stay square.", arm: "Hold the dumbbell in the right hand at first, or touch the bench with the left for balance.", videoUrl: "https://www.youtube.com/watch?v=Zfr6wizR8rs", videoSite: "Squat University" },
+  { name: "Hip thrust on bench", group: "Legs", muscles: "Glutes", cue: "Upper back on bench, dumbbell on hips, drive up and squeeze 1 second.", arm: "Rest the dumbbell on hips; hands only steady it.", videoUrl: "https://www.youtube.com/watch?v=xDmFkJxPzeM", videoSite: "Jeff Nippard" },
+  { name: "Neutral-grip dumbbell bench press", group: "Push", muscles: "Chest, triceps", cue: "Palms facing each other, lower to mid-chest, press up and slightly in.", arm: "Neutral grip keeps the wrist straight. Stop if the plate area aches.", videoUrl: "https://www.youtube.com/watch?v=fZuQpjhaR_M", videoSite: "PureGym" },
+  { name: "Incline dumbbell press", group: "Push", muscles: "Upper chest, shoulders", cue: "Bench at about 30 degrees, elbows at 45 degrees from the body.", arm: "Neutral grip, wrists stacked over elbows.", videoUrl: "https://www.youtube.com/watch?v=IP4oeKh1Sd4", videoSite: "Max Euceda" },
+  { name: "Seated dumbbell shoulder press", group: "Push", muscles: "Shoulders", cue: "Bench upright, press overhead without arching the low back.", arm: "Neutral grip; go light at first.", videoUrl: "https://www.youtube.com/watch?v=1jYq9QQEWqE", videoSite: "Buff Dudes" },
+  { name: "Incline push-up on dumbbell handles", group: "Push", muscles: "Chest, triceps", cue: "Hands on dumbbells resting on the bench, body in a straight line.", arm: "Holding handles keeps the wrist straight instead of bent back on a flat palm.", videoUrl: "https://www.youtube.com/watch?v=yAbg3_pJKvw", videoSite: "PureGym" },
+  { name: "Chest-supported dumbbell row", group: "Pull", muscles: "Upper back, lats", cue: "Lie face down on incline bench, pull elbows back to hips.", arm: "Neutral grip; the bench removes lower-back strain.", videoUrl: "https://www.youtube.com/watch?v=H75im9fAUMc", videoSite: "Men's Health" },
+  { name: "One-arm dumbbell row", group: "Pull", muscles: "Lats, upper back", cue: "Knee and hand on bench, pull dumbbell to hip, no twisting.", arm: "When the left arm braces on the bench, use a fist or forearm if a flat palm bothers it.", videoUrl: "https://www.youtube.com/watch?v=gfUg6qWohTk", videoSite: "ATHLEAN-X" },
+  { name: "Rear-delt fly", group: "Pull", muscles: "Rear shoulders", cue: "Chest on incline bench, raise light dumbbells out wide.", arm: "Use the 5 to 10 lb kettlebells or light dumbbells.", videoUrl: "https://www.youtube.com/watch?v=qfc70k40318", videoSite: "Jeff Nippard" },
+  { name: "Hammer curl", group: "Pull", muscles: "Biceps, forearms", cue: "Palms facing in, curl without swinging.", arm: "Builds the forearm gently. Start light on the left side.", videoUrl: "https://www.youtube.com/watch?v=8XLxfXROrTo", videoSite: "Scott Herman" },
+  { name: "Dead bug", group: "Core", muscles: "Deep core", cue: "Low back pressed down, extend opposite arm and leg slowly.", arm: "No load on the forearm.", videoUrl: "https://www.youtube.com/watch?v=0XVbn86Btj0", videoSite: "Squat University" },
+  { name: "Side plank on forearm", group: "Core", muscles: "Obliques", cue: "Elbow under shoulder, hips high, straight line head to feet.", arm: "Weight rests on the elbow and forearm bone, not the wrist.", videoUrl: "https://www.youtube.com/watch?v=vDWfbBovDC4", videoSite: "Mayo Clinic" },
+  { name: "Kettlebell suitcase carry", group: "Core", muscles: "Core, grip", cue: "One 10 to 15 lb kettlebell at your side, walk tall for 30 to 40 seconds.", arm: "Good gentle grip work. Start with 10 lb on the left side.", videoUrl: "https://www.youtube.com/watch?v=7D96dK6oaP8", videoSite: "Squat University" },
+  { name: "Leg press (gym)", group: "Legs", muscles: "Quads, glutes", cue: "Feet shoulder-width, lower until knees near 90 degrees, don't lock out hard.", arm: "No grip load. Your main heavy leg lift in the gym.", videoUrl: "https://www.youtube.com/watch?v=p5dCqF7wWUw", videoSite: "PureGym" },
+  { name: "Leg curl machine (gym)", group: "Legs", muscles: "Hamstrings", cue: "Curl smoothly, 2 seconds back.", arm: "No grip load.", videoUrl: "https://www.youtube.com/watch?v=QjNFk4F5dAs", videoSite: "PureGym" },
+  { name: "Machine chest press (gym)", group: "Push", muscles: "Chest, triceps", cue: "Handles at mid-chest, press without shrugging.", arm: "Pick neutral handles if the machine has them.", videoUrl: "https://www.youtube.com/watch?v=sqNwDkUU_Ps", videoSite: "PureGym" },
+  { name: "Triceps rope pushdown (gym)", group: "Push", muscles: "Triceps", cue: "Elbows pinned, spread the rope at the bottom.", arm: "Rope keeps the wrist neutral.", videoUrl: "https://www.youtube.com/watch?v=IKQ_bKGT3LQ", videoSite: "ATHLEAN-X" },
+  { name: "Lat pulldown, neutral grip (gym)", group: "Pull", muscles: "Lats", cue: "Pull the handle to upper chest, chest up.", arm: "Use wrist straps once the weight gets heavy.", videoUrl: "https://www.youtube.com/watch?v=hnSqbBk15tw", videoSite: "Jeff Nippard" },
+  { name: "Seated cable row (gym)", group: "Pull", muscles: "Mid back", cue: "Sit tall, pull to the belly, squeeze shoulder blades.", arm: "Neutral V-handle.", videoUrl: "https://www.youtube.com/watch?v=7o2oolbmzeI", videoSite: "Scott Herman" },
+  { name: "Cable face pull (gym)", group: "Pull", muscles: "Rear shoulders, upper back", cue: "Rope at face height, pull to forehead, elbows high.", arm: "Light load, easy on the wrist.", videoUrl: "https://www.youtube.com/watch?v=ljgqer1ZpXg", videoSite: "ATHLEAN-X" },
+  { name: "Pallof press (gym)", group: "Core", muscles: "Core, anti-rotation", cue: "Stand sideways to cable, press straight out, resist the twist.", arm: "Light load.", videoUrl: "https://www.youtube.com/watch?v=5_8d8vHgZvU", videoSite: "Girls Gone Strong" },
+  { name: "Bike, steady", group: "Cardio", muscles: "Heart, legs", cue: "20 to 40 minutes at a pace where you can still talk in full sentences.", arm: "No arm load.", videoUrl: "https://www.youtube.com/watch?v=NwwDBARCGgo", videoSite: "PureGym" },
+  { name: "Bike, intervals", group: "Cardio", muscles: "Heart, legs", cue: "After warm-up, 30 seconds hard and 90 seconds easy, 6 to 8 rounds.", arm: "No arm load.", videoUrl: "https://www.youtube.com/watch?v=Rh8VswzWDow", videoSite: "Joe Wicks" },
 ];
 
 export const STRETCHES: Stretch[] = [
-  { name: "Kneeling hip flexor stretch", hold: "30 sec per side", cue: "Back knee on a pad, squeeze that glute, and shift hips forward until the front of the hip stretches.", videoUrl: "" },
-  { name: "Hamstring stretch on the bench", hold: "30 sec per side", cue: "Heel on the bench, leg straight, hinge forward from the hips with a flat back.", videoUrl: "" },
-  { name: "Figure-4 glute stretch", hold: "30 sec per side", cue: "On your back, cross one ankle over the other knee and pull the bottom leg toward your chest.", videoUrl: "" },
-  { name: "Doorway chest stretch", hold: "30 sec", cue: "Forearm on the door frame at shoulder height, step through until the chest stretches.", videoUrl: "" },
-  { name: "Child's pose with reach", hold: "45 sec", cue: "Knees wide, sit back toward your heels, reach your arms long and breathe slowly.", videoUrl: "" },
-  { name: "Cat-cow", hold: "8 slow reps", cue: "On hands and knees, round your back up, then let it sink as you lift your head.", videoUrl: "" },
-  { name: "Gentle forearm flexor and extensor stretch", hold: "20 sec each, both arms", cue: "Arm straight out, gently pull the fingers back, then down. Never force the left wrist.", videoUrl: "" },
-  { name: "Calf stretch on a wall", hold: "30 sec per side", cue: "Hands on the wall, back leg straight with heel down, lean in.", videoUrl: "" },
+  { name: "Kneeling hip flexor stretch", hold: "30 sec per side", cue: "Back knee on a pad, squeeze that glute, and shift hips forward until the front of the hip stretches.", videoUrl: "https://www.youtube.com/watch?v=34SlL-PPCWQ", videoSite: "Mass General Orthopaedics" },
+  { name: "Hamstring stretch on the bench", hold: "30 sec per side", cue: "Heel on the bench, leg straight, hinge forward from the hips with a flat back.", videoUrl: "https://www.youtube.com/watch?v=cZrwnHCmuwM", videoSite: "Bob & Brad" },
+  { name: "Figure-4 glute stretch", hold: "30 sec per side", cue: "On your back, cross one ankle over the other knee and pull the bottom leg toward your chest.", videoUrl: "https://www.youtube.com/watch?v=gfXUkQCBdO8", videoSite: "Bob & Brad" },
+  { name: "Doorway chest stretch", hold: "30 sec", cue: "Forearm on the door frame at shoulder height, step through until the chest stretches.", videoUrl: "https://www.youtube.com/watch?v=B9uY01NoqBg", videoSite: "Baptist Health" },
+  { name: "Child's pose with reach", hold: "45 sec", cue: "Knees wide, sit back toward your heels, reach your arms long and breathe slowly.", videoUrl: "https://www.youtube.com/watch?v=FPHDSZJw3EY", videoSite: "UCSF Orthopaedic Surgery" },
+  { name: "Cat-cow", hold: "8 slow reps", cue: "On hands and knees, round your back up, then let it sink as you lift your head.", videoUrl: "https://www.youtube.com/watch?v=vuyUwtHl694", videoSite: "California Department of Public Health" },
+  { name: "Gentle forearm flexor and extensor stretch", hold: "20 sec each, both arms", cue: "Arm straight out, gently pull the fingers back, then down. Never force the left wrist.", videoUrl: "https://www.youtube.com/watch?v=q2T5jRWGCqM", videoSite: "Bob & Brad" },
+  { name: "Calf stretch on a wall", hold: "30 sec per side", cue: "Hands on the wall, back leg straight with heel down, lean in.", videoUrl: "https://www.youtube.com/watch?v=mafo7o7OnFo", videoSite: "Hospital for Special Surgery" },
 ];
 
 export const PLAN3: PlanDay[] = [

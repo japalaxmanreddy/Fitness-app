@@ -2,7 +2,7 @@ import { youtubeId } from "./youtube-id";
 
 export { youtubeId };
 
-export function HowTo({ url, title }: { url: string; title: string }) {
+export function HowTo({ url, title, site }: { url: string; title: string; site?: string }) {
   const trimmed = url.trim();
   if (!trimmed) return null;
   const id = youtubeId(trimmed);
@@ -16,11 +16,13 @@ export function HowTo({ url, title }: { url: string; title: string }) {
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
           loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
         />
       ) : null}
       <a className="btn primary" href={trimmed} target="_blank" rel="noreferrer">
         Watch how-to
       </a>
+      {site ? <p className="note">{site}</p> : null}
     </div>
   );
 }

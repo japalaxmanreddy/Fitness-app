@@ -45,15 +45,21 @@ describe("plans and library", () => {
     assert.equal(PLAN4.length, 5);
     assert.equal(PLAN5.length, 6);
     assert.equal(GYM5.length, 6);
+    const urls = [...LIB, ...STRETCHES].map((item) => item.videoUrl);
+    assert.equal(urls.length, 35);
+    assert.equal(new Set(urls).size, 35);
     for (const exercise of LIB) {
-      assert.equal(typeof exercise.videoUrl, "string");
+      assert.match(exercise.videoUrl, /^https:\/\/www\.youtube\.com\/watch\?v=[\w-]+$/);
+      assert.ok(exercise.videoSite);
       assert.ok(exercise.cue && exercise.arm && exercise.muscles);
       assert.ok(ANIMS[animFor(exercise.name)]);
     }
     for (const stretch of STRETCHES) {
-      assert.equal(typeof stretch.videoUrl, "string");
+      assert.match(stretch.videoUrl, /^https:\/\/www\.youtube\.com\/watch\?v=[\w-]+$/);
+      assert.ok(stretch.videoSite);
       assert.ok(ANIMS[animFor(stretch.name)]);
     }
+    assert.equal(youtubeId(LIB[0].videoUrl), "hFD8CIQM3GU");
   });
 
   it("draws the 18 week line from 195 to 177", () => {

@@ -25,7 +25,7 @@ export function Stretch() {
           ]}
         />
       </section>
-      <HowTo url={current.videoUrl} title={current.name} />
+      <HowTo url={current.videoUrl} title={current.name} site={current.videoSite} />
       <section className="card">
         <h2>Full routine</h2>
         <div className="pick-list">
