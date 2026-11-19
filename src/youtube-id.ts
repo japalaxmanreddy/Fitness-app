@@ -1,3 +1,14 @@
+export function watchUrl(url: string): string {
+  const trimmed = url.trim();
+  const id = youtubeId(trimmed);
+  return id ? `https://www.youtube.com/watch?v=${id}` : trimmed;
+}
+
+export function thumbnailUrl(url: string): string | null {
+  const id = youtubeId(url.trim());
+  return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
+}
+
 export function youtubeId(url: string): string | null {
   const trimmed = url.trim();
   if (!trimmed) return null;

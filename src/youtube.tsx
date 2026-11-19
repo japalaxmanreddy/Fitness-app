@@ -1,25 +1,19 @@
-import { youtubeId } from "./youtube-id";
-
-export { youtubeId };
+import { thumbnailUrl, watchUrl } from "./youtube-id";
 
 export function HowTo({ url, title, site }: { url: string; title: string; site?: string }) {
-  const trimmed = url.trim();
-  if (!trimmed) return null;
-  const id = youtubeId(trimmed);
+  const watch = watchUrl(url);
+  if (!watch) return null;
+  const poster = thumbnailUrl(url);
+  const label = `Watch how-to: ${title}`;
   return (
     <div className="howto">
-      {id ? (
-        <iframe
-          className="video"
-          src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}`}
-          title={`How-to video: ${title}`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-          loading="lazy"
-          referrerPolicy="strict-origin-when-cross-origin"
-        />
+      {poster ? (
+        <a className="thumb" href={watch} target="_blank" rel="noopener" aria-label={label}>
+          <img src={poster} alt="" />
+          <span className="play" aria-hidden="true" />
+        </a>
       ) : null}
-      <a className="btn primary" href={trimmed} target="_blank" rel="noreferrer">
+      <a className="btn primary" href={watch} target="_blank" rel="noopener">
         Watch how-to
       </a>
       {site ? <p className="note">{site}</p> : null}
