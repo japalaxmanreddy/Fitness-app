@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { combineDays, kgToLb, parseFitbitActivities, parseWithingsMeasures, withingsValue } from "./normalize.ts";
+import { combineDays, kgToLb, parseFitbitActivities, parseHealthActiveMinutes, parseHealthCalorieRollup, parseHealthExercises, parseHealthStepsRollup, parseWithingsMeasures, withingsValue } from "./normalize.ts";
 import { withingsHosts } from "./withings-hosts.ts";
 
 describe("withings region", () => {
@@ -44,6 +44,51 @@ describe("withings numbers", () => {
     assert.equal(days[0].activeMinutes, 30);
     assert.equal(days[0].restingHr, 61);
     assert.equal(days[0].sleepMinutes, 420);
+  });
+});
+
+describe("google health records", () => {
+  it("maps daily rollups, sleep, weight, and a run", () => {
+    const steps = parseHealthStepsRollup([{ civilStartTime: { date: { year: 2026, month: 11, day: 18 } }, steps: { countSum: "8420" } }]);
+    assert.equal(steps.get("2026-11-18"), 8420);
+    const calories = parseHealthCalorieRollup([{ civilStartTime: { date: { year: 2026, month: 11, day: 18 } }, totalCalories: { kcalSum: 2140.4 } }]);
+    assert.equal(calories.get("2026-11-18"), 2140);
+    const active = parseHealthActiveMinutes([{
+      activeMinutes: {
+        interval: { civilStartTime: { date: { year: 2026, month: 11, day: 18 } } },
+        activeMinutesByActivityLevel: [
+          { activityLevel: "MODERATE", activeMinutes: "20" },
+          { activityLevel: "VIGOROUS", activeMinutes: "12" },
+        ],
+      },
+    }]);
+    assert.equal(active.fairly.get("2026-11-18"), 20);
+    assert.equal(active.very.get("2026-11-18"), 12);
+    const runs = parseHealthExercises([{
+      name: "users/me/dataTypes/exercise/dataPoints/run-1",
+      exercise: {
+        exerciseType: "RUNNING",
+        activeDuration: "1800s",
+        interval: { startTime: "2026-11-18T23:05:00Z", civilStartTime: { date: { year: 2026, month: 11, day: 18 }, time: { hours: 18, minutes: 5 } } },
+        metricsSummary: {
+          distanceMillimeters: 5000000,
+          caloriesKcal: 320,
+          steps: "4200",
+          averageHeartRateBeatsPerMinute: "150",
+          elevationGainMillimeters: 12000,
+          heartRateZoneDurations: { lightTime: "600s", moderateTime: "1080s", vigorousTime: "60s", peakTime: "60s" },
+        },
+      },
+    }]);
+    assert.equal(runs.length, 1);
+    assert.equal(runs[0].kind, "run");
+    assert.equal(runs[0].date, "2026-11-18");
+    assert.equal(runs[0].start, "18:05");
+    assert.equal(runs[0].durationMin, 30);
+    assert.equal(runs[0].distanceMi, 3.11);
+    assert.equal(runs[0].avgHr, 150);
+    assert.equal(runs[0].zones?.cardio, 18);
+    assert.equal(runs[0].zones?.peak, 2);
   });
 });
 
