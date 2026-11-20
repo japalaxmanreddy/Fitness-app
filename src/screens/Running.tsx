@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { devicesConfigured } from "../device-config";
+import { deviceStatus } from "../devices";
 import { formatPretty, todayISO } from "../dates";
 import { planFor } from "../data";
 import { HrChart, MilesChart, PaceChart } from "../run-charts";
@@ -50,7 +51,25 @@ export function Running() {
   const [kind, setKind] = useState<RunKind>(tonight.kind === "hard" ? "run" : "walk");
   const [hr, setHr] = useState("");
   const [message, setMessage] = useState("");
+  const [fitbitConnected, setFitbitConnected] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
   const runs = [...data.runs].sort((a, b) => (a.date === b.date ? b.start.localeCompare(a.start) : b.date.localeCompare(a.date)));
+  const showForm = !fitbitConnected || manualOpen;
+
+  useEffect(() => {
+    if (!devicesConfigured()) return;
+    let cancel = false;
+    deviceStatus()
+      .then((links) => {
+        if (!cancel) setFitbitConnected(links.fitbit);
+      })
+      .catch(() => {
+        if (!cancel) setFitbitConnected(false);
+      });
+    return () => {
+      cancel = true;
+    };
+  }, []);
 
   function saveRun() {
     const miles = Number(distance);
@@ -85,6 +104,59 @@ export function Running() {
   for (const attempt of status.attempts) {
     if (attempt.met) cleared.set(attempt.ladderWeek, attempt.miles);
   }
+
+  const logList = (
+    <section className="card stack">
+      <h2>{fitbitConnected ? "Runs from Fitbit" : "Recent runs and walks"}</h2>
+      {fitbitConnected ? <p className="note">These are the synced runs and walks. A typed entry only fills a gap.</p> : null}
+      {runs.length === 0 ? (
+        <p className="note">{fitbitConnected ? "None yet. They show up here after Fitbit syncs." : "None yet. Save an evening above, or sync Fitbit from Progress."}</p>
+      ) : null}
+      <ul className="history">
+        {runs.slice(0, 30).map((run) => {
+          const evening = eveningForDate(plan, run.date);
+          const pace = paceSeconds(run);
+          const high = easyHrHigh(run, evening.kind);
+          const zones = zoneLine(run);
+          return (
+            <li key={run.id}>
+              <div>
+                <strong>
+                  {formatPretty(run.date)}
+                  {run.start ? ` · ${run.start}` : ""} · {evening.kind === "hard" ? "Hard run" : "Easy walk"}
+                </strong>
+                <p className="note">
+                  {formatMiles(run.distanceMi)} mi · {formatDuration(run.durationMin)}
+                  {pace ? ` · ${formatPace(pace)}` : ""}
+                  {run.avgHr ? ` · avg HR ${Math.round(run.avgHr)} bpm` : " · no heart rate"}
+                  {run.source === "fitbit" ? " · Fitbit" : " · typed"}
+                </p>
+                {run.calories || run.steps || run.elevationFt ? (
+                  <p className="note">
+                    {[
+                      run.calories ? `${Math.round(run.calories)} cal` : "",
+                      run.steps ? `${Math.round(run.steps).toLocaleString()} steps` : "",
+                      run.elevationFt ? `${Math.round(run.elevationFt)} ft up` : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                ) : null}
+                {zones ? <p className="note">{zones}</p> : null}
+                {evening.kind !== "hard" ? <p className="note">Target: keep avg HR under ~{EASY_HR_LIMIT} bpm.</p> : null}
+                {high ? <p className="hr-flag">Easy session went over ~{EASY_HR_LIMIT} bpm.</p> : null}
+              </div>
+              {run.source === "manual" ? (
+                <button type="button" className="text-btn" onClick={() => removeRun(run.id)}>
+                  Remove
+                </button>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
 
   return (
     <div className="stack-lg">
@@ -166,82 +238,45 @@ export function Running() {
         </ul>
       </section>
 
-      <section className="card stack">
-        <h2>Log an evening</h2>
-        <p className="note">
-          {devicesConfigured()
-            ? "Fitbit Run and Walk entries fill in after a sync. A hand entry with a similar start time wins."
-            : "No sync service is set up, so this list is what you type in. Connect Fitbit later and those runs join the same log."}
-        </p>
-        <Field label="Date" type="date" value={date} onChange={setDate} />
-        <Field label="Start" type="time" value={start} onChange={setStart} />
-        <div className="grid-2">
-          <Field label="Miles" type="text" inputMode="decimal" value={distance} onChange={setDistance} />
-          <Field label="Minutes" type="text" inputMode="decimal" value={minutes} onChange={setMinutes} />
-        </div>
-        <SelectField
-          label="Type"
-          value={kind}
-          onChange={(value) => setKind(value === "walk" ? "walk" : "run")}
-          options={[
-            { value: "walk", label: "Walk" },
-            { value: "run", label: "Run" },
-          ]}
-        />
-        <Field label="Average heart rate" type="text" inputMode="numeric" value={hr} onChange={setHr} hint="Optional. Easy nights aim under about 145 bpm." />
-        <button type="button" className="btn primary" onClick={saveRun}>
-          Save evening
+      {fitbitConnected ? logList : null}
+      {fitbitConnected && !showForm ? (
+        <button type="button" className="link-quiet" onClick={() => setManualOpen(true)}>
+          Add a run manually
         </button>
-        {message ? <p className="note">{message}</p> : null}
-      </section>
-
-      <section className="card stack">
-        <h2>Recent runs and walks</h2>
-        {runs.length === 0 ? <p className="note">None yet. Save an evening above, or sync Fitbit from Progress.</p> : null}
-        <ul className="history">
-          {runs.slice(0, 30).map((run) => {
-            const evening = eveningForDate(plan, run.date);
-            const pace = paceSeconds(run);
-            const high = easyHrHigh(run, evening.kind);
-            const zones = zoneLine(run);
-            return (
-              <li key={run.id}>
-                <div>
-                  <strong>
-                    {formatPretty(run.date)}
-                    {run.start ? ` · ${run.start}` : ""} · {evening.kind === "hard" ? "Hard run" : "Easy walk"}
-                  </strong>
-                  <p className="note">
-                    {formatMiles(run.distanceMi)} mi · {formatDuration(run.durationMin)}
-                    {pace ? ` · ${formatPace(pace)}` : ""}
-                    {run.avgHr ? ` · avg HR ${Math.round(run.avgHr)} bpm` : " · no heart rate"}
-                    {run.source === "fitbit" ? " · Fitbit" : " · typed"}
-                  </p>
-                  {run.calories || run.steps || run.elevationFt ? (
-                    <p className="note">
-                      {[
-                        run.calories ? `${Math.round(run.calories)} cal` : "",
-                        run.steps ? `${Math.round(run.steps).toLocaleString()} steps` : "",
-                        run.elevationFt ? `${Math.round(run.elevationFt)} ft up` : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
-                  ) : null}
-                  {zones ? <p className="note">{zones}</p> : null}
-                  {evening.kind !== "hard" ? <p className="note">Target: keep avg HR under ~{EASY_HR_LIMIT} bpm.</p> : null}
-                  {high ? <p className="hr-flag">Easy session went over ~{EASY_HR_LIMIT} bpm.</p> : null}
-                </div>
-                {run.source === "manual" ? (
-                  <button type="button" className="text-btn" onClick={() => removeRun(run.id)}>
-                    Remove
-                  </button>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+      ) : null}
+      {showForm ? (
+        <section className="card stack">
+          <h2>Log an evening</h2>
+          <p className="note">
+            {fitbitConnected
+              ? "Use this if a Fitbit run did not sync, or the weekly Google sign-in lapsed. A hand entry with a similar start time wins."
+              : devicesConfigured()
+                ? "Fitbit Run and Walk entries fill in after a sync. A hand entry with a similar start time wins."
+                : "No sync service is set up, so this list is what you type in. Connect Fitbit later and those runs join the same log."}
+          </p>
+          <Field label="Date" type="date" value={date} onChange={setDate} />
+          <Field label="Start" type="time" value={start} onChange={setStart} />
+          <div className="grid-2">
+            <Field label="Miles" type="text" inputMode="decimal" value={distance} onChange={setDistance} />
+            <Field label="Minutes" type="text" inputMode="decimal" value={minutes} onChange={setMinutes} />
+          </div>
+          <SelectField
+            label="Type"
+            value={kind}
+            onChange={(value) => setKind(value === "walk" ? "walk" : "run")}
+            options={[
+              { value: "walk", label: "Walk" },
+              { value: "run", label: "Run" },
+            ]}
+          />
+          <Field label="Average heart rate" type="text" inputMode="numeric" value={hr} onChange={setHr} hint="Optional. Easy nights aim under about 145 bpm." />
+          <button type="button" className="btn primary" onClick={saveRun}>
+            Save evening
+          </button>
+          {message ? <p className="note">{message}</p> : null}
+        </section>
+      ) : null}
+      {fitbitConnected ? null : logList}
 
       <section className="card stack">
         <h2>Weekly miles</h2>
