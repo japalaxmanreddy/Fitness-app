@@ -8,11 +8,13 @@ import {
   suggestedDay,
   type PlanDay,
 } from "../data";
+import { workoutRows } from "../day-plan";
+import { DayBody } from "../day-view";
 import { workoutHasData } from "../log";
 import { useStore } from "../store";
 import type { Phase, PlanDays } from "../storage";
 import { SessionLogger } from "../session";
-import { Callout, NumberedList, Segmented, SimpleTable, Steps } from "../ui";
+import { Callout, NumberedList, Segmented, Steps } from "../ui";
 
 function DayCard({
   day,
@@ -38,22 +40,23 @@ function DayCard({
         <span>
           <span className="sum-title">{day.day}</span>
           <span className="sum-meta">
-            {day.rows.length} moves{logged ? " · logged today" : ""}
+            Warm-up, workout, cool-down, and movement breaks{logged ? " · logged today" : ""}
           </span>
         </span>
       </summary>
-      <div className="body stack">
-        <SimpleTable columns={["Exercise", "Sets x reps"]} rows={day.rows} />
-        <details className="log">
-          <summary>Log sets, reps, and weight</summary>
-          <SessionLogger
-            label={day.day}
-            phase={phase}
-            days={days}
-            rows={day.rows}
-            idFor={(date) => `${date}|${phase}|${day.day}`}
-          />
-        </details>
+      <div className="body">
+        <DayBody
+          day={day}
+          log={
+            <SessionLogger
+              label={day.day}
+              phase={phase}
+              days={days}
+              rows={workoutRows(day)}
+              idFor={(date) => `${date}|${phase}|${day.day}`}
+            />
+          }
+        />
       </div>
     </details>
   );
@@ -113,7 +116,7 @@ export function Workouts() {
           );
         })}
       </div>
-      <p className="note">Each session takes about 45 to 55 minutes, including warm-up. Rest 60 to 90 seconds between sets. Watch any move in the Exercises tab.</p>
+      <p className="note">Each lifting session takes about 45 to 55 minutes, including the warm-up and cool-down. Open a move for the animation, the cues, and the how-to video. The Exercises tab is still there as the full library.</p>
 
       <details className="guide">
         <summary>How to progress</summary>

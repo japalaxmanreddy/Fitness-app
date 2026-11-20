@@ -328,7 +328,10 @@ details summary {
   cursor: pointer;
 }
 details summary::-webkit-details-marker { display: none; }
-details.day > summary::after, details.guide > summary::after, details.log > summary::after {
+details.day > summary::after,
+details.guide > summary::after,
+details.log > summary::after,
+details.move > summary::after {
   content: "";
   flex: none;
   width: 8px;
@@ -344,6 +347,29 @@ details .body { padding-bottom: 12px; }
 details.guide > summary { font-weight: 700; }
 details.log { border-top: 1px solid var(--line); margin-top: 4px; }
 details.log > summary { min-height: 44px; color: var(--accent); font-weight: 700; }
+.day-block { margin-top: 14px; }
+.day-block:first-child { margin-top: 0; }
+.block-label {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+details.move {
+  border-top: 1px solid var(--line);
+  background: transparent;
+  box-shadow: none;
+}
+details.move > summary { min-height: 48px; padding: 8px 0; align-items: flex-start; }
+.plate-note {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-line);
+  font-size: 0.86rem;
+}
 
 .callout {
   background: var(--warn-bg);

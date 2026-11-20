@@ -203,6 +203,22 @@ export const ANIMS: Record<string, Anim> = {
     a: pose({ h: [134, 46], s: [126, 60], p: [102, 100], e: [136, 72], w: [150, 62], k: [120, 124], f: [128, 150], k2: [84, 126], f2: [68, 150] }),
     b: pose({ h: [140, 48], s: [132, 62], p: [108, 102], e: [140, 74], w: [150, 62], k: [124, 124], f: [128, 150], k2: [88, 126], f2: [68, 150] }),
   },
+  airSquat: {
+    a: pose({ h: [100, 32], s: [100, 48], p: [100, 92], e: [110, 64], w: [106, 56], k: [104, 121], f: [100, 150] }),
+    b: pose({ h: [102, 63], s: [96, 78], p: [80, 118], e: [108, 94], w: [104, 86], k: [110, 118], f: [100, 150] }),
+  },
+  airHinge: {
+    a: pose({ h: [100, 32], s: [100, 48], p: [100, 92], e: [100, 70], w: [100, 94], k: [103, 121], f: [100, 150] }),
+    b: pose({ h: [140, 62], s: [126, 70], p: [86, 92], e: [126, 92], w: [126, 114], k: [98, 121], f: [100, 150] }),
+  },
+  circles: {
+    a: pose({ ...STAND, e: [78, 62], w: [56, 70] }),
+    b: pose({ ...STAND, e: [118, 40], w: [132, 24] }),
+  },
+  walk: {
+    a: pose({ h: [100, 32], s: [100, 48], p: [100, 92], e: [102, 70], w: [102, 94], k: [110, 120], f: [114, 150], k2: [92, 120], f2: [86, 150] }),
+    b: pose({ h: [100, 32], s: [100, 48], p: [100, 92], e: [102, 70], w: [102, 94], k: [92, 120], f: [86, 150], k2: [110, 120], f2: [114, 150] }),
+  },
 };
 
 export const ANIM_KEYS = [
@@ -231,12 +247,20 @@ export const ANIM_KEYS = [
   "catcow",
   "forearm",
   "calf",
+  "airSquat",
+  "airHinge",
+  "circles",
+  "walk",
 ] as const;
 
 export function animFor(name: string): string {
   const n = name.toLowerCase();
+  if (n.includes("arm circle")) return "circles";
+  if (n.includes("walk")) return "walk";
+  if (n.includes("bodyweight squat")) return "airSquat";
   if (n.includes("single-leg")) return "singleHinge";
   if (n.includes("romanian")) return "hinge";
+  if (n.includes("hinge")) return "airHinge";
   if (n.includes("goblet") || n.includes("hack")) return "squat";
   if (n.includes("split") || n.includes("step-up") || n.includes("lunge")) return "split";
   if (n.includes("hip thrust")) return "thrust";
