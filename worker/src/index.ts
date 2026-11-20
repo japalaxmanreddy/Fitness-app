@@ -1,8 +1,10 @@
 import { combineDays, parseFitbitActivities, parseFitbitHeart, parseFitbitSeries, parseFitbitSleep, parseFitbitWeight, parseWithingsActivity, parseWithingsMeasures, parseWithingsSleep, type FitbitActivity, type SyncedDay } from "./normalize";
+import { withingsHosts } from "./withings-hosts";
 
 export interface Env {
   TOKENS: KVNamespace;
   APP_ORIGIN: string;
+  WITHINGS_REGION?: string;
   WITHINGS_CLIENT_ID?: string;
   WITHINGS_CLIENT_SECRET?: string;
   FITBIT_CLIENT_ID?: string;
@@ -93,7 +95,7 @@ async function startAuth(request: Request, env: Env, provider: Provider): Promis
   await env.TOKENS.put(`pending:${state}`, JSON.stringify(pending), { expirationTtl: 600 });
   const redirect = callbackUrl(request, provider);
   if (provider === "withings") {
-    const auth = new URL("https://account.withings.com/oauth2_user/authorize2");
+    const auth = new URL(withingsHosts(env.WITHINGS_REGION).authorize);
     auth.searchParams.set("response_type", "code");
     auth.searchParams.set("client_id", env.WITHINGS_CLIENT_ID || "");
     auth.searchParams.set("redirect_uri", redirect);
@@ -228,7 +230,7 @@ async function withingsToken(env: Env, fields: Record<string, string>): Promise<
     client_secret: env.WITHINGS_CLIENT_SECRET || "",
     ...fields,
   });
-  const response = await fetch("https://wbsapi.withings.net/v2/oauth2", { method: "POST", body });
+  const response = await fetch(`${withingsHosts(env.WITHINGS_REGION).api}/v2/oauth2`, { method: "POST", body });
   const payload = (await response.json()) as { status?: number; body?: { access_token?: string; refresh_token?: string; expires_in?: number } };
   if (!response.ok || payload.status !== 0 || !payload.body?.access_token || !payload.body.refresh_token) {
     throw new Error("Withings did not accept the sign-in.");
@@ -272,19 +274,20 @@ function range(days: number): { start: string; end: string; startUnix: number; e
 async function fetchWithings(env: Env, deviceId: string, days: number) {
   const token = await accessToken(env, deviceId, "withings");
   const window = range(days);
-  const measures = await withingsPost(token, "https://wbsapi.withings.net/measure", {
+  const api = withingsHosts(env.WITHINGS_REGION).api;
+  const measures = await withingsPost(token, `${api}/measure`, {
     action: "getmeas",
     meastypes: "1,4,6,76",
     category: "1",
     startdate: String(window.startUnix),
     enddate: String(window.endUnix),
   });
-  const activity = await withingsPost(token, "https://wbsapi.withings.net/v2/measure", {
+  const activity = await withingsPost(token, `${api}/v2/measure`, {
     action: "getactivity",
     startdateymd: window.start,
     enddateymd: window.end,
   });
-  const sleep = await withingsPost(token, "https://wbsapi.withings.net/v2/sleep", {
+  const sleep = await withingsPost(token, `${api}/v2/sleep`, {
     action: "getsummary",
     startdateymd: window.start,
     enddateymd: window.end,

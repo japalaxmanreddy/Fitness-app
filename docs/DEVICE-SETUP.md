@@ -47,7 +47,9 @@ If the Cloudflare secrets are missing, this workflow skips itself. The normal Pa
 
 ## 2. Withings
 
-1. Open [developer.withings.com](https://developer.withings.com/) and sign in with the same Withings account as the scale.
+This scale account is on the US Medical Cloud. The Worker’s `WITHINGS_REGION` is `us`, so sign-in goes to `account.us.withingsmed.com` and data calls go to `wbsapi.us.withingsmed.net`. The public hosts (`account.withings.com` and `wbsapi.withings.net`) are a different cloud and do not serve this account. Set `WITHINGS_REGION` to `eu` only for a public-cloud app.
+
+1. Open [developer.us.withingsmed.com](https://developer.us.withingsmed.com/) and sign in with the same Withings account as the scale.
 2. Create an app. For the callback, paste the Withings callback address from above. It must be exact.
 3. Turn on the scopes `user.metrics`, `user.activity`, and `user.sleepevents`.
 4. Copy the client id into `WITHINGS_CLIENT_ID` and the client secret into `WITHINGS_CLIENT_SECRET`.
