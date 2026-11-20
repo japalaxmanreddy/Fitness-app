@@ -4,6 +4,8 @@ compatibility_date = "2025-11-01"
 
 [vars]
 APP_ORIGIN = "https://japalaxmanreddy.github.io"
+# us = US Medical Cloud (account.us.withingsmed.com). eu = public cloud (account.withings.com).
+WITHINGS_REGION = "us"
 
 [[kv_namespaces]]
 binding = "TOKENS"

@@ -1,6 +1,16 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { combineDays, kgToLb, parseFitbitActivities, parseWithingsMeasures, withingsValue } from "./normalize.ts";
+import { withingsHosts } from "./withings-hosts.ts";
+
+describe("withings region", () => {
+  it("uses the US Medical Cloud unless the region is eu", () => {
+    assert.equal(withingsHosts("us").authorize, "https://account.us.withingsmed.com/oauth2_user/authorize2");
+    assert.equal(withingsHosts(undefined).api, "https://wbsapi.us.withingsmed.net");
+    assert.equal(withingsHosts("eu").authorize, "https://account.withings.com/oauth2_user/authorize2");
+    assert.equal(withingsHosts("eu").api, "https://wbsapi.withings.net");
+  });
+});
 
 describe("withings numbers", () => {
   it("applies the unit exponent and converts kilograms to pounds", () => {
