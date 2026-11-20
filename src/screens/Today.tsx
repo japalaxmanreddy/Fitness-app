@@ -3,9 +3,44 @@ import { energyNeeds, inchesToFeet, proteinGrams } from "../calc";
 import { todayISO } from "../dates";
 import { PROTEIN_FOODS, planFor, suggestedDay } from "../data";
 import { todayRunSummary } from "../runs";
+import { ABS_PHASES, absRoadmap } from "../weight-trend";
 import { goTo } from "../nav";
 import { useStore } from "../store";
 import { Field, Metric, PropList, SelectField } from "../ui";
+
+function AbsRoadmap({ planStart, checkins }: { planStart: string; checkins: Parameters<typeof absRoadmap>[0] }) {
+  const road = absRoadmap(checkins, planStart);
+  const percent = Math.round(road.percent * 100);
+  return (
+    <section className="card stack">
+      <h2>12-month abs roadmap</h2>
+      <p className="note">
+        A guide for the next year. Visible abs depend mostly on body fat. Nothing here is a guarantee.
+      </p>
+      <div className="road-bar" aria-hidden="true">
+        <span style={{ width: `${percent}%` }} />
+      </div>
+      <p className="note">
+        {road.hasLog
+          ? `7-day average ${road.average.toFixed(1)} lb. The bar runs from 195 lb toward the 174–180 lb band.`
+          : "No weigh-ins yet. The bar starts at 195 lb and moves with the 7-day average toward 174–180 lb."}
+        {road.inBand ? " The average is inside that band." : ""}
+        {road.belowBand ? " The average is under 174 lb, which is quicker than this plan." : ""}
+      </p>
+      <ol className="road-phases">
+        {ABS_PHASES.map((phase, index) => (
+          <li key={phase.title} className={index === road.phase ? "current" : undefined}>
+            <strong>
+              {phase.title}
+              {index === road.phase ? " · now" : ""}
+            </strong>
+            <span>{phase.detail}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
 
 function cleanNumber(value: string): string | null {
   const trimmed = value.trim().replace(/,/g, "");
@@ -79,6 +114,7 @@ export function Today() {
           Your home plan to drop from 195 to 174-180 lb while building muscle, with animated how-to demos for every exercise and stretch and left-forearm-safe choices built in.
         </p>
       </div>
+      <AbsRoadmap planStart={profile.planStart} checkins={data.checkins} />
 
       <section className="card stack">
         <h2>Your daily targets</h2>

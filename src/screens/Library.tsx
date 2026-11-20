@@ -28,7 +28,7 @@ export function Library() {
     <div className="stack-lg">
       <div>
         <h1>Library</h1>
-        <p className="lede">Warm-ups, strength moves, stretches, and the short breaks for later in the day.</p>
+        <p className="lede">Warm-ups, strength, abs and core, stretches, and the short breaks for later in the day.</p>
       </div>
       <label className="field">
         <span>Search</span>

@@ -460,6 +460,12 @@ ul.plain li span:last-child { color: var(--muted); flex: none; text-align: right
 }
 .ladder li > span:last-child { white-space: nowrap; text-align: right; }
 .ladder li.current { background: var(--accent-soft); margin: 0 -8px; padding: 8px; border-radius: 10px; border-bottom: 0; }
+.road-bar { height: 10px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.road-bar span { display: block; height: 100%; background: var(--accent); }
+.road-phases { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.road-phases li { display: flex; flex-direction: column; gap: 2px; color: var(--muted); font-size: 0.92rem; }
+.road-phases li.current { color: var(--ink); }
+.road-phases strong { color: var(--ink); }
 .evening-row strong { font-size: 0.82rem; }
 .confirm {
   background: var(--surface-2);

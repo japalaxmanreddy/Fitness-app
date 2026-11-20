@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { FOREARM_PLATE_NOTE, dayOutline, type DayMove } from "./day-plan";
 import { Demo } from "./demo";
 import { planFor, type PlanDay } from "./data";
-import { todayISO } from "./dates";
+import { diffDays, todayISO } from "./dates";
 import { animFor } from "./motion";
 import { eveningCopy } from "./runs";
 import { useStore } from "./store";
@@ -34,7 +34,7 @@ export function MoveCard({ move, initiallyOpen = false }: { move: DayMove; initi
         <div className="body stack">
           <Demo anim={animFor(move.name)} label={move.name} />
           <p>{move.cue}</p>
-          {move.forearm ? <p className="plate-note">{FOREARM_PLATE_NOTE}</p> : null}
+          {move.forearm ? <p className="plate-note">{move.forearmNote || FOREARM_PLATE_NOTE}</p> : null}
           {move.videoUrl ? <HowTo url={move.videoUrl} title={move.name} site={move.videoSite} /> : null}
         </div>
       ) : null}
@@ -56,8 +56,9 @@ function Block({ title, note, moves }: { title: string; note: string; moves: Day
 
 export function DayBody({ day, log }: { day: PlanDay; log: ReactNode }) {
   const { data } = useStore();
-  const outline = dayOutline(day);
   const plan = planFor(data.profile.phase, data.profile.days);
+  const week = Math.max(0, Math.floor(diffDays(data.profile.planStart, todayISO()) / 7));
+  const outline = dayOutline(day, { week, phase: data.profile.phase, siblings: plan });
   const snacks = outline.snacks.map((move) => (move.name.startsWith("Evening") ? eveningCopy(plan, day, data.runs, todayISO()) : move));
   return (
     <div className="stack">
@@ -75,6 +76,7 @@ export function DayBody({ day, log }: { day: PlanDay; log: ReactNode }) {
         <summary>Log sets, reps, and weight</summary>
         {log}
       </details>
+      {outline.abs.length ? <Block title="Abs & core" note={outline.absNote} moves={outline.abs} /> : null}
       <Block
         title="Cool-down"
         note="About 5 minutes on the muscles you just trained."
