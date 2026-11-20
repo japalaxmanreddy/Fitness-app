@@ -35,7 +35,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        cacheId: "fitness-v10",
+        cacheId: "fitness-v11",
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest,ico}"],
         navigateFallback: `${base}index.html`,
         navigateFallbackDenylist: [/\/assets\//],

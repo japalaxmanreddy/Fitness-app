@@ -25,6 +25,20 @@ export async function readProfilePhoto(): Promise<string | null> {
   }
 }
 
+export async function removeProfilePhoto(): Promise<void> {
+  try {
+    const db = await openDb();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE, "readwrite");
+      tx.objectStore(STORE).delete("profile");
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch {
+    /* the circle already clears if storage is unavailable */
+  }
+}
+
 export async function saveProfilePhoto(file: File): Promise<string> {
   const dataUrl = await resizeImage(file, 512);
   const db = await openDb();
