@@ -54,27 +54,29 @@ This scale account is on the US Medical Cloud. The Worker’s `WITHINGS_REGION` 
 3. Turn on the scopes `user.metrics`, `user.activity`, and `user.sleepevents`.
 4. Copy the client id into `WITHINGS_CLIENT_ID` and the client secret into `WITHINGS_CLIENT_SECRET`.
 
-## 3. Fitbit
+## 3. Fitbit, through Google Health
 
-The band, including one named Fitbit Air, syncs to the Fitbit app on the phone. This site does not talk to the band over Bluetooth. It reads the Fitbit account after the band has synced.
+The band, including one named Fitbit Air, syncs to the Fitbit or Google Health app on the phone. This site does not talk to the band over Bluetooth.
 
-Use the Fitbit Web API, not Google Fit. Google closed the Google Fit APIs. Fitbit’s own API at `api.fitbit.com` is still the one for a Fitbit account. This app asks for daily totals (steps, calories, active minutes, resting heart rate, sleep, weight) and for each Run or Walk on the activity list. It does not ask for minute-by-minute intraday data, which Fitbit reviews separately. If Google moves the developer site, start at [dev.fitbit.com](https://dev.fitbit.com/).
+As of November 2, 2026, Google turned off the old Fitbit Web API and `api.fitbit.com` sign-in for Google Health users. New apps are created in Google Cloud, and this Worker uses the [Google Health API](https://developers.google.com/health/migration). The secret names stay `FITBIT_CLIENT_ID` and `FITBIT_CLIENT_SECRET`. Paste the Google OAuth client ID and client secret into those two secrets.
 
-Runs and walks come from `GET /1/user/-/activities/list.json`. For each Run or Walk the Worker keeps the date and start time, distance, duration, average heart rate, calories, steps, elevation, and heart-rate zone minutes. Pace is distance divided by time. The `activity` and `heartrate` scopes already cover that list, so this app does not add the `location` scope. Distance is stored on the activity itself, including a treadmill entry that has no GPS track. The location scope would only add the GPS path, which this app does not draw. A band with no GPS still shows distance when Fitbit saved it on the activity. People who already connected Fitbit do not need to sign in again for this.
+Sign-in uses `https://accounts.google.com/o/oauth2/v2/auth` with `access_type=offline` and `prompt=consent`, so Google returns a refresh token. Tokens are exchanged at `https://oauth2.googleapis.com/token`. Daily steps, calories, active minutes, resting heart rate, sleep, weight, and each run or walk come from `https://health.googleapis.com/v4`. Distance and elevation are on the exercise record, so this app does not request the location scope.
 
-1. Open [dev.fitbit.com/apps/new](https://dev.fitbit.com/apps/new) while signed into the Fitbit account that owns the band.
-2. Fill the form:
-   - Application name: `Fitness`
-   - Description: `Personal fitness log`
-   - Application website: `https://japalaxmanreddy.github.io/Fitness-app/`
-   - Organization: your name
-   - Organization website: `https://japalaxmanreddy.github.io/Fitness-app/`
-   - Terms of service and privacy policy: the same site address
-   - OAuth 2.0 Application type: **Personal** (only your own Fitbit login can connect)
-   - Redirect URL: the Fitbit callback address from above, exact
-   - Access type: **Read-Only**
-3. Save. Copy the OAuth 2.0 Client ID into `FITBIT_CLIENT_ID` and the Client Secret into `FITBIT_CLIENT_SECRET`.
-4. Run **Deploy device worker** again so those secrets are stored on the Worker.
+Before Connect will work, do these steps in [Google Cloud console](https://console.cloud.google.com/). Use the same Google account that is signed into the Google Health app.
+
+1. Create a project, or open the one Google already created when you started the OAuth client.
+2. Open **APIs & Services → Library**, search for **Google Health API**, and click **Enable**. That is the only API to enable.
+3. Open **Google Auth Platform → Branding** (or **APIs & Services → OAuth consent screen**). Set the app name to `Fitness`, the user support email to your address, and the app home page to `https://japalaxmanreddy.github.io/Fitness-app/`.
+4. Set the user type to **External** and leave the publishing status on **Testing**. A personal app does not need to be published. While it is in Testing, Google refresh tokens expire after 7 days, so Connect again when sync starts asking you to sign in.
+5. Open **Google Auth Platform → Data Access** (or **Scopes**). Add only these three read scopes:
+   - `https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly` (steps, calories, active minutes, runs, walks, distance)
+   - `https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly` (weight and resting heart rate)
+   - `https://www.googleapis.com/auth/googlehealth.sleep.readonly` (sleep)
+6. Open **Google Auth Platform → Audience**. Under **Test users**, add the Gmail address you use in the Google Health app, then save. Only those addresses can grant access while the app is in Testing.
+7. Open **APIs & Services → Credentials → Create credentials → OAuth client ID**. Choose **Web application**. Under **Authorized redirect URIs**, add exactly `https://fitness-devices.j-laxmanreddy.workers.dev/auth/fitbit/callback`. Do not leave the only URI as `https://www.google.com`. That value is only an example in Google’s setup wizard.
+8. Copy the client ID into the GitHub secret `FITBIT_CLIENT_ID` and the client secret into `FITBIT_CLIENT_SECRET`.
+9. On the phone, open the Google Health app and sign in with that same Google account so the Fitbit data is linked. If it is not linked, Connect will come back and ask you to do this. Google’s link page is [fitbit.google.com/auth/signup](https://fitbit.google.com/auth/signup).
+10. Run **Deploy device worker** again so the two secrets are stored on the Worker.
 
 ## 4. Turn it on in the app
 

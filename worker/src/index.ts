@@ -1,4 +1,4 @@
-import { combineDays, parseFitbitActivities, parseFitbitHeart, parseFitbitSeries, parseFitbitSleep, parseFitbitWeight, parseWithingsActivity, parseWithingsMeasures, parseWithingsSleep, type FitbitActivity, type SyncedDay } from "./normalize";
+import { combineDays, parseHealthActiveMinutes, parseHealthCalorieRollup, parseHealthExercises, parseHealthRestingHeart, parseHealthSleep, parseHealthStepsRollup, parseHealthWeight, parseWithingsActivity, parseWithingsMeasures, parseWithingsSleep, type FitbitActivity, type SyncedDay } from "./normalize";
 import { withingsHosts } from "./withings-hosts";
 
 export interface Env {
@@ -27,6 +27,11 @@ type SavedToken = {
 };
 
 const APP_PATH = "/Fitness-app/";
+const GOOGLE_HEALTH_SCOPES = [
+  "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
+  "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly",
+  "https://www.googleapis.com/auth/googlehealth.sleep.readonly",
+].join(" ");
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default {
@@ -103,14 +108,13 @@ async function startAuth(request: Request, env: Env, provider: Provider): Promis
     auth.searchParams.set("state", state);
     return Response.redirect(auth.toString(), 302);
   }
-  const challenge = base64url(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))));
-  const auth = new URL("https://www.fitbit.com/oauth2/authorize");
+  const auth = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   auth.searchParams.set("response_type", "code");
   auth.searchParams.set("client_id", env.FITBIT_CLIENT_ID || "");
   auth.searchParams.set("redirect_uri", redirect);
-  auth.searchParams.set("scope", "activity heartrate sleep weight profile");
-  auth.searchParams.set("code_challenge", challenge);
-  auth.searchParams.set("code_challenge_method", "S256");
+  auth.searchParams.set("scope", GOOGLE_HEALTH_SCOPES);
+  auth.searchParams.set("access_type", "offline");
+  auth.searchParams.set("prompt", "consent");
   auth.searchParams.set("state", state);
   return Response.redirect(auth.toString(), 302);
 }
@@ -129,7 +133,7 @@ async function callback(request: Request, env: Env, provider: Provider): Promise
   try {
     const token = provider === "withings"
       ? await withingsToken(env, { grant_type: "authorization_code", code, redirect_uri: callbackUrl(request, provider) })
-      : await fitbitToken(env, { grant_type: "authorization_code", code, code_verifier: pending.verifier, redirect_uri: callbackUrl(request, provider) });
+      : await fitbitToken(env, { grant_type: "authorization_code", code, redirect_uri: callbackUrl(request, provider) });
     await env.TOKENS.put(tokenKey(pending.deviceId, provider), JSON.stringify(token));
     return Response.redirect(appReturn(env, provider), 302);
   } catch (error) {
@@ -218,7 +222,7 @@ async function accessToken(env: Env, deviceId: string, provider: Provider): Prom
   if (saved.expiresAt > Date.now() + 60_000) return saved.accessToken;
   const refreshed = provider === "withings"
     ? await withingsToken(env, { grant_type: "refresh_token", refresh_token: saved.refreshToken })
-    : await fitbitToken(env, { grant_type: "refresh_token", refresh_token: saved.refreshToken });
+    : await fitbitToken(env, { grant_type: "refresh_token", refresh_token: saved.refreshToken }, saved.refreshToken);
   await env.TOKENS.put(tokenKey(deviceId, provider), JSON.stringify(refreshed));
   return refreshed.accessToken;
 }
@@ -242,22 +246,25 @@ async function withingsToken(env: Env, fields: Record<string, string>): Promise<
   };
 }
 
-async function fitbitToken(env: Env, fields: Record<string, string>): Promise<SavedToken> {
-  const basic = btoa(`${env.FITBIT_CLIENT_ID || ""}:${env.FITBIT_CLIENT_SECRET || ""}`);
-  const response = await fetch("https://api.fitbit.com/oauth2/token", {
+async function fitbitToken(env: Env, fields: Record<string, string>, previousRefresh = ""): Promise<SavedToken> {
+  const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
-    headers: {
-      Authorization: `Basic ${basic}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ client_id: env.FITBIT_CLIENT_ID || "", ...fields }),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: env.FITBIT_CLIENT_ID || "",
+      client_secret: env.FITBIT_CLIENT_SECRET || "",
+      ...fields,
+    }),
   });
-  const payload = (await response.json()) as { access_token?: string; refresh_token?: string; expires_in?: number };
-  if (!response.ok || !payload.access_token || !payload.refresh_token) throw new Error("Fitbit did not accept the sign-in.");
+  const payload = (await response.json()) as { access_token?: string; refresh_token?: string; expires_in?: number; error_description?: string };
+  const refreshToken = payload.refresh_token || previousRefresh;
+  if (!response.ok || !payload.access_token || !refreshToken) {
+    throw new Error(payload.error_description || "Google Health did not accept the sign-in.");
+  }
   return {
     accessToken: payload.access_token,
-    refreshToken: payload.refresh_token,
-    expiresAt: Date.now() + (payload.expires_in ?? 28800) * 1000,
+    refreshToken,
+    expiresAt: Date.now() + (payload.expires_in ?? 3600) * 1000,
   };
 }
 
@@ -313,57 +320,89 @@ async function withingsPost(token: string, url: string, fields: Record<string, s
 async function fetchFitbit(env: Env, deviceId: string, days: number) {
   const token = await accessToken(env, deviceId, "fitbit");
   const window = range(days);
-  const headers = { Authorization: `Bearer ${token}`, "Accept-Language": "en_US" };
-  const get = async (path: string) => {
-    const response = await fetch(`https://api.fitbit.com${path}`, { headers });
-    if (!response.ok) throw new Error("Fitbit data could not be read.");
-    return response.json() as Promise<Record<string, unknown>>;
+  const endExclusive = addIsoDay(window.end, 1);
+  const calorieStart = addIsoDay(window.end, -13);
+  const warnings: string[] = [];
+  const read = async <T>(label: string, load: () => Promise<T>, empty: T): Promise<T> => {
+    try {
+      return await load();
+    } catch (error) {
+      warnings.push(error instanceof Error ? error.message : `${label} could not be read.`);
+      return empty;
+    }
   };
-  const [steps, calories, fairly, very, heart, sleep, weight] = await Promise.all([
-    get(`/1/user/-/activities/steps/date/${window.start}/${window.end}.json`),
-    get(`/1/user/-/activities/calories/date/${window.start}/${window.end}.json`),
-    get(`/1/user/-/activities/minutesFairlyActive/date/${window.start}/${window.end}.json`),
-    get(`/1/user/-/activities/minutesVeryActive/date/${window.start}/${window.end}.json`),
-    get(`/1/user/-/activities/heart/date/${window.start}/${window.end}.json`),
-    get(`/1.2/user/-/sleep/date/${window.start}/${window.end}.json`),
-    get(`/1/user/-/body/log/weight/date/${window.start}/${window.end}.json`),
+  const [steps, calories, active, heart, sleep, weight, exercises] = await Promise.all([
+    read("Steps", () => healthRollup(token, "steps", window.start, endExclusive), []),
+    read("Calories", () => healthRollup(token, "total-calories", calorieStart, endExclusive), []),
+    read("Active minutes", () => healthList(token, "active-minutes", `active_minutes.interval.civil_start_time >= "${window.start}" AND active_minutes.interval.civil_start_time < "${endExclusive}"`), []),
+    read("Heart rate", () => healthList(token, "daily-resting-heart-rate", `daily_resting_heart_rate.date >= "${window.start}" AND daily_resting_heart_rate.date < "${endExclusive}"`), []),
+    read("Sleep", () => healthList(token, "sleep", `sleep.interval.civil_end_time >= "${window.start}" AND sleep.interval.civil_end_time < "${endExclusive}"`, 25), []),
+    read("Weight", () => healthList(token, "weight", `weight.sample_time.civil_time >= "${window.start}" AND weight.sample_time.civil_time < "${endExclusive}"`), []),
+    read("Runs", () => healthList(token, "exercise", `exercise.interval.civil_start_time >= "${window.start}" AND exercise.interval.civil_start_time < "${endExclusive}"`, 25), []),
   ]);
-  let activities: FitbitActivity[] | null = null;
-  let activityWarning = "";
-  try {
-    activities = await fetchFitbitActivities(get, window.start);
-  } catch (error) {
-    activityWarning = error instanceof Error ? error.message : "Fitbit runs could not be read.";
-  }
+  const minutes = parseHealthActiveMinutes(active as Parameters<typeof parseHealthActiveMinutes>[0]);
   return {
     maps: {
-      fitbitSteps: parseFitbitSeries(steps["activities-steps"] as { dateTime?: string; value?: string }[]),
-      fitbitCalories: parseFitbitSeries(calories["activities-calories"] as { dateTime?: string; value?: string }[]),
-      fitbitFairly: parseFitbitSeries(fairly["activities-minutesFairlyActive"] as { dateTime?: string; value?: string }[]),
-      fitbitVery: parseFitbitSeries(very["activities-minutesVeryActive"] as { dateTime?: string; value?: string }[]),
-      fitbitHeart: parseFitbitHeart(heart["activities-heart"] as { dateTime?: string; value?: { restingHeartRate?: number } }[]),
-      fitbitSleep: parseFitbitSleep(sleep.sleep as { dateOfSleep?: string; minutesAsleep?: number }[]),
-      fitbitWeight: parseFitbitWeight(weight.weight as { date?: string; weight?: number }[]),
+      fitbitSteps: parseHealthStepsRollup(steps as Parameters<typeof parseHealthStepsRollup>[0]),
+      fitbitCalories: parseHealthCalorieRollup(calories as Parameters<typeof parseHealthCalorieRollup>[0]),
+      fitbitFairly: minutes.fairly,
+      fitbitVery: minutes.very,
+      fitbitHeart: parseHealthRestingHeart(heart as Parameters<typeof parseHealthRestingHeart>[0]),
+      fitbitSleep: parseHealthSleep(sleep as Parameters<typeof parseHealthSleep>[0]),
+      fitbitWeight: parseHealthWeight(weight as Parameters<typeof parseHealthWeight>[0]),
     },
-    activities,
-    activityWarning,
+    activities: parseHealthExercises(exercises as Parameters<typeof parseHealthExercises>[0]) as FitbitActivity[],
+    activityWarning: warnings[0] || "",
   };
 }
 
-async function fetchFitbitActivities(
-  get: (path: string) => Promise<Record<string, unknown>>,
-  afterDate: string,
-): Promise<FitbitActivity[]> {
-  const activities: FitbitActivity[] = [];
-  let offset = 0;
-  for (let page = 0; page < 5; page += 1) {
-    const body = await get(`/1/user/-/activities/list.json?afterDate=${afterDate}&sort=asc&offset=${offset}&limit=100`);
-    const raw = Array.isArray(body.activities) ? body.activities : [];
-    activities.push(...parseFitbitActivities({ activities: raw as Record<string, unknown>[] }));
-    if (raw.length < 100) break;
-    offset += 100;
+function addIsoDay(iso: string, days: number): string {
+  const date = new Date(`${iso}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function civilDate(iso: string): { date: { year: number; month: number; day: number } } {
+  const [year, month, day] = iso.split("-").map(Number);
+  return { date: { year, month, day } };
+}
+
+async function healthJson(token: string, path: string, init?: RequestInit): Promise<Record<string, unknown>> {
+  const response = await fetch(`https://health.googleapis.com/v4${path}`, {
+    ...init,
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(init?.headers ?? {}) },
+  });
+  const body = (await response.json().catch(() => ({}))) as { error?: { details?: { reason?: string }[] } };
+  if (!response.ok) {
+    if (body.error?.details?.some((detail) => detail.reason === "ACCOUNT_NOT_LINKED")) {
+      throw new Error("This Google account is not linked to Google Health yet. Open the Google Health app, sign in, then connect again.");
+    }
+    throw new Error("Google Health data could not be read.");
   }
-  return activities;
+  return body as Record<string, unknown>;
+}
+
+async function healthRollup(token: string, dataType: string, start: string, end: string): Promise<unknown[]> {
+  const body = await healthJson(token, `/users/me/dataTypes/${dataType}/dataPoints:dailyRollUp`, {
+    method: "POST",
+    body: JSON.stringify({ range: { start: civilDate(start), end: civilDate(end) }, windowSizeDays: 1 }),
+  });
+  return Array.isArray(body.rollupDataPoints) ? body.rollupDataPoints : [];
+}
+
+async function healthList(token: string, dataType: string, filter: string, pageSize = 1000): Promise<unknown[]> {
+  const points: unknown[] = [];
+  let pageToken = "";
+  for (let page = 0; page < 8; page += 1) {
+    const params = new URLSearchParams({ filter, pageSize: String(pageSize) });
+    if (pageToken) params.set("pageToken", pageToken);
+    const body = await healthJson(token, `/users/me/dataTypes/${dataType}/dataPoints?${params.toString()}`);
+    const batch = Array.isArray(body.dataPoints) ? body.dataPoints : [];
+    points.push(...batch);
+    pageToken = typeof body.nextPageToken === "string" ? body.nextPageToken : "";
+    if (!pageToken || batch.length < pageSize) break;
+  }
+  return points;
 }
 
 function base64url(bytes: Uint8Array): string {
