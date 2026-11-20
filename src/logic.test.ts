@@ -11,6 +11,7 @@ import {
   matchExercise,
   planWeight,
 } from "./data.ts";
+import { dayOutline, loadsForearm } from "./day-plan.ts";
 import { prescribedSets } from "./log.ts";
 import { ANIM_KEYS, ANIMS, animFor } from "./motion.ts";
 import { normalize } from "./storage.ts";
@@ -100,6 +101,46 @@ describe("animations", () => {
     assert.equal(animFor("Gentle forearm flexor and extensor stretch"), "forearm");
     assert.equal(animFor("Figure-4 glute stretch"), "lying");
     assert.equal(animFor("Cat-cow"), "catcow");
+    assert.equal(animFor("Arm circles"), "circles");
+    assert.equal(animFor("Hip hinge with hands on hips"), "airHinge");
+    assert.equal(animFor("Bodyweight squats"), "airSquat");
+    assert.equal(animFor("Evening · Easy walk"), "walk");
+    assert.equal(animFor("Incline push-up on dumbbell handles"), "press");
+  });
+});
+
+describe("day outline", () => {
+  it("keeps every training day self-contained", () => {
+    for (const day of [...PLAN3, ...PLAN4, ...PLAN5, ...GYM5]) {
+      const outline = dayOutline(day);
+      assert.deepEqual(outline.warmup.map((move) => move.name), [
+        "Arm circles",
+        "Hip hinge with hands on hips",
+        "Bodyweight squats",
+      ]);
+      assert.ok(outline.workout.length > 0);
+      assert.equal(outline.workout.some((move) => /stretch routine/i.test(move.name)), false);
+      assert.ok(outline.cooldown.length >= 2 && outline.cooldown.length <= 3);
+      assert.equal(outline.snacks.length, 3);
+      assert.match(outline.snacks[0].name, /Incline push-up on dumbbell handles/);
+      assert.match(outline.snacks[0].prescription, /half of a max set/);
+      assert.match(outline.snacks[1].prescription, /half of a max set/);
+      assert.equal(outline.snacks[0].forearm, true);
+      assert.equal(outline.snacks[0].videoUrl.includes("youtube.com/watch"), true);
+    }
+  });
+
+  it("flags grip and pressing moves for the forearm plates", () => {
+    assert.equal(loadsForearm("Chest-supported dumbbell row"), true);
+    assert.equal(loadsForearm("Hammer curl"), true);
+    assert.equal(loadsForearm("Incline push-up on dumbbell handles"), true);
+    assert.equal(loadsForearm("Side plank on forearm"), true);
+    assert.equal(loadsForearm("Kettlebell suitcase carry"), true);
+    assert.equal(loadsForearm("Bike, steady"), false);
+    assert.equal(loadsForearm("Dead bug"), false);
+    assert.equal(loadsForearm("Leg press"), false);
+    assert.equal(loadsForearm("Bodyweight squats"), false);
+    assert.equal(loadsForearm("Arm circles"), false);
   });
 });
 

@@ -9,7 +9,7 @@ https://japalaxmanreddy.github.io/Fitness-app/
 ## What it does
 
 - Daily targets from the Mifflin-St Jeor equation, an activity factor, and a 500 calorie cut. Protein is about 0.82 g per pound of body weight.
-- Phase 1 home plans for 5, 4, or 3 days, and the Phase 2 gym week.
+- Phase 1 home plans for 5, 4, or 3 days, and the Phase 2 gym week. Each day opens with a short warm-up, the workout, a 5-minute cool-down, and easy movement breaks for later.
 - Animated demos, cues, and left-forearm notes for every exercise and stretch.
 - Logs for sets, reps, and weight, plus morning weight, steps, and calories burned (typed in from a watch or Fitbit).
 - An 18-week weight chart from 195 lb to 177 lb, with your weigh-ins on the same graph.
