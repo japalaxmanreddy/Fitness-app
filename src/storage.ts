@@ -37,11 +37,25 @@ export type WorkoutLog = {
   updatedAt: string;
 };
 
+export type MetricSource = "manual" | "withings" | "fitbit";
+
 export type CheckIn = {
   date: string;
   weight: string;
   steps: string;
   calories: string;
+  weightSource?: MetricSource;
+  stepsSource?: MetricSource;
+  caloriesSource?: MetricSource;
+  fatPct?: string;
+  muscleLb?: string;
+  bmi?: string;
+  activeMinutes?: string;
+  restingHr?: string;
+  sleepMinutes?: string;
+  bodySource?: "withings" | "fitbit";
+  activitySource?: "withings" | "fitbit";
+  sleepSource?: "withings" | "fitbit";
 };
 
 export type Data = {
@@ -123,6 +137,21 @@ function normalizeWorkout(value: unknown): WorkoutLog | null {
   };
 }
 
+function optionalMetric(value: unknown): string | undefined {
+  const text = asString(value);
+  return text ? text : undefined;
+}
+
+function optionalSource(value: unknown): MetricSource | undefined {
+  if (value === "manual" || value === "withings" || value === "fitbit") return value;
+  return undefined;
+}
+
+function optionalDevice(value: unknown): "withings" | "fitbit" | undefined {
+  if (value === "withings" || value === "fitbit") return value;
+  return undefined;
+}
+
 function normalizeCheckin(value: unknown): CheckIn | null {
   if (!value || typeof value !== "object") return null;
   const row = value as Partial<CheckIn>;
@@ -132,6 +161,18 @@ function normalizeCheckin(value: unknown): CheckIn | null {
     weight: asString(row.weight),
     steps: asString(row.steps),
     calories: asString(row.calories),
+    weightSource: optionalSource(row.weightSource),
+    stepsSource: optionalSource(row.stepsSource),
+    caloriesSource: optionalSource(row.caloriesSource),
+    fatPct: optionalMetric(row.fatPct),
+    muscleLb: optionalMetric(row.muscleLb),
+    bmi: optionalMetric(row.bmi),
+    activeMinutes: optionalMetric(row.activeMinutes),
+    restingHr: optionalMetric(row.restingHr),
+    sleepMinutes: optionalMetric(row.sleepMinutes),
+    bodySource: optionalDevice(row.bodySource),
+    activitySource: optionalDevice(row.activitySource),
+    sleepSource: optionalDevice(row.sleepSource),
   };
 }
 

@@ -1,0 +1,10 @@
+name = "fitness-devices"
+main = "src/index.ts"
+compatibility_date = "2025-11-01"
+
+[vars]
+APP_ORIGIN = "https://japalaxmanreddy.github.io"
+
+[[kv_namespaces]]
+binding = "TOKENS"
+id = "REPLACE_WITH_KV_ID"

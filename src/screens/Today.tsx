@@ -53,7 +53,16 @@ export function Today() {
       setMessage("Cleared that day.");
       return;
     }
-    upsertCheckin({ date, weight: nextWeight, steps: nextSteps, calories: nextCalories });
+    upsertCheckin({
+      ...existing,
+      date,
+      weight: nextWeight,
+      steps: nextSteps,
+      calories: nextCalories,
+      weightSource: nextWeight ? "manual" : undefined,
+      stepsSource: nextSteps ? "manual" : undefined,
+      caloriesSource: nextCalories ? "manual" : undefined,
+    });
     setWeight(nextWeight);
     setSteps(nextSteps);
     setCalories(nextCalories);

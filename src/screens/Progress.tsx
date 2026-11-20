@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
+import type { CheckIn, MetricSource } from "../storage";
 import { StepsChart, WeightChart } from "../chart";
 import { addDays, diffDays, formatPretty, todayISO } from "../dates";
 import { planWeight } from "../data";
 import { formatSets, setsHaveData } from "../log";
 import { useStore } from "../store";
 import { backupPayload, parseBackup } from "../storage";
+import { Devices } from "./Devices";
 import { Field } from "../ui";
 
 export function Progress() {
@@ -73,6 +75,8 @@ export function Progress() {
         <h1>Progress</h1>
         <p className="lede">A plan at about 1 lb a week, from 195 lb down to 177 lb over 18 weeks. Logged mornings draw on top of the line.</p>
       </div>
+      <Devices />
+      <DeviceMetrics checkins={data.checkins} />
 
       <section className="card stack">
         <h2>Weight plan</h2>
@@ -113,7 +117,11 @@ export function Progress() {
                 <div>
                   <strong>{formatPretty(item.date)}</strong>
                   <p className="note">
-                    {[item.weight ? `${item.weight} lb` : "", item.steps ? `${Number(item.steps).toLocaleString()} steps` : "", item.calories ? `${Number(item.calories).toLocaleString()} cal burned` : ""]
+                    {[
+                      item.weight ? `${item.weight} lb${sourceTag(item.weightSource)}` : "",
+                      item.steps ? `${Number(item.steps).toLocaleString()} steps${sourceTag(item.stepsSource)}` : "",
+                      item.calories ? `${Number(item.calories).toLocaleString()} cal burned${sourceTag(item.caloriesSource)}` : "",
+                    ]
                       .filter(Boolean)
                       .join(" · ") || "Empty"}
                   </p>
@@ -188,5 +196,41 @@ export function Progress() {
         ) : null}
       </section>
     </div>
+  );
+}
+
+function sourceTag(source?: MetricSource): string {
+  if (source === "withings") return " · Withings";
+  if (source === "fitbit") return " · Fitbit";
+  if (source === "manual") return " · Typed in";
+  return "";
+}
+
+function latest(checkins: CheckIn[], pick: (item: CheckIn) => string | undefined): string {
+  const found = [...checkins].sort((a, b) => b.date.localeCompare(a.date)).find((item) => pick(item));
+  return found ? pick(found) || "" : "";
+}
+
+function DeviceMetrics({ checkins }: { checkins: CheckIn[] }) {
+  const fat = latest(checkins, (item) => item.fatPct);
+  const muscle = latest(checkins, (item) => item.muscleLb);
+  const bmi = latest(checkins, (item) => item.bmi);
+  const heart = latest(checkins, (item) => item.restingHr);
+  const sleep = latest(checkins, (item) => item.sleepMinutes);
+  const active = latest(checkins, (item) => item.activeMinutes);
+  if (!fat && !muscle && !bmi && !heart && !sleep && !active) return null;
+  const sleepHours = sleep ? (Number(sleep) / 60).toFixed(1) : "";
+  return (
+    <section className="card stack">
+      <h2>From your devices</h2>
+      <div className="metrics">
+        {fat ? <article className="metric"><p className="metric-value">{fat}%</p><p className="metric-label">Fat</p><p className="metric-detail">Withings</p></article> : null}
+        {muscle ? <article className="metric"><p className="metric-value">{muscle}</p><p className="metric-label">Muscle, lb</p><p className="metric-detail">Withings</p></article> : null}
+        {bmi ? <article className="metric"><p className="metric-value">{bmi}</p><p className="metric-label">BMI</p><p className="metric-detail">Withings</p></article> : null}
+        {heart ? <article className="metric"><p className="metric-value">{heart}</p><p className="metric-label">Resting heart rate</p><p className="metric-detail">Fitbit</p></article> : null}
+        {sleepHours ? <article className="metric"><p className="metric-value">{sleepHours}</p><p className="metric-label">Sleep, hours</p><p className="metric-detail">Latest night</p></article> : null}
+        {active ? <article className="metric"><p className="metric-value">{active}</p><p className="metric-label">Active minutes</p><p className="metric-detail">Fitbit</p></article> : null}
+      </div>
+    </section>
   );
 }
