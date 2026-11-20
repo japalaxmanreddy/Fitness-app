@@ -74,16 +74,40 @@ export const TWO_WEEK_RISE_NOTE = "The weekly average is up two weeks in a row. 
 
 export type AbsPhase = 0 | 1 | 2;
 
+export const ABS_PHASES = [
+  {
+    title: "Months 1–3",
+    detail: "Build the core habit and stay with the calorie target. About 1–1.5 lb a week of fat loss is the pace to aim for.",
+  },
+  {
+    title: "Months 4–6",
+    detail: "Add a little load on the core moves. A reasonable landing zone for this stretch is about 175–180 lb.",
+  },
+  {
+    title: "Months 7–12",
+    detail: "Use the gym progressions and keep leaning out slowly. The band to land in is about 174–180 lb.",
+  },
+] as const;
+
 export function absRoadmap(checkins: CheckIn[], planStart: string, today = todayISO()): {
-  current: number;
+  average: number;
+  hasLog: boolean;
   percent: number;
   phase: AbsPhase;
+  inBand: boolean;
+  belowBand: boolean;
 } {
-  const latest = weighPoints(checkins).at(-1);
-  const current = latest?.lb ?? 195;
-  const lost = Math.max(0, 195 - current);
-  const percent = Math.max(0, Math.min(1, lost / (195 - 177)));
+  const points = weighPoints(checkins);
+  const average = rollingAverages(points).at(-1)?.lb ?? 195;
+  const percent = Math.max(0, Math.min(1, (195 - average) / (195 - 177)));
   const months = Math.max(0, diffDays(planStart, today) / 30.44);
   const phase: AbsPhase = months >= 6 ? 2 : months >= 3 ? 1 : 0;
-  return { current, percent, phase };
+  return {
+    average,
+    hasLog: points.length > 0,
+    percent,
+    phase,
+    inBand: points.length > 0 && average <= 180 && average >= 174,
+    belowBand: points.length > 0 && average < 174,
+  };
 }

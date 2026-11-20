@@ -11,7 +11,8 @@ import {
   matchExercise,
   planWeight,
 } from "./data.ts";
-import { dayOutline, filterLibrary, libraryEntries, loadsForearm } from "./day-plan.ts";
+import { dayOutline, filterLibrary, libraryEntries, loadsForearm, trainingDayGetsAbs } from "./day-plan.ts";
+import { absRoadmap } from "./weight-trend.ts";
 import { prescribedSets } from "./log.ts";
 import { ANIM_KEYS, ANIMS, animFor } from "./motion.ts";
 import { normalize } from "./storage.ts";
@@ -105,6 +106,11 @@ describe("animations", () => {
     assert.equal(animFor("Hip hinge with hands on hips"), "airHinge");
     assert.equal(animFor("Bodyweight squats"), "airSquat");
     assert.equal(animFor("Evening · Easy walk"), "walk");
+    assert.equal(animFor("Lying leg raise"), "legRaise");
+    assert.equal(animFor("Bicycle crunch"), "bicycle");
+    assert.equal(animFor("Hollow hold"), "hollow");
+    assert.equal(animFor("Reverse crunch on the bench"), "revCrunch");
+    assert.equal(animFor("Captain's chair knee raise"), "captain");
     assert.equal(animFor("Incline push-up on dumbbell handles"), "press");
   });
 });
@@ -127,7 +133,36 @@ describe("day outline", () => {
       assert.match(outline.snacks[1].prescription, /half of a max set/);
       assert.equal(outline.snacks[0].forearm, true);
       assert.equal(outline.snacks[0].videoUrl.includes("youtube.com/watch"), true);
+      assert.ok(Array.isArray(outline.abs));
     }
+  });
+
+  it("puts a rotating abs block on 4 of the 5 training days", () => {
+    const lifting = PLAN5.filter(trainingDayGetsAbs);
+    assert.equal(lifting.length, 4);
+    assert.equal(trainingDayGetsAbs(PLAN5[2]), false);
+    const monday = dayOutline(PLAN5[0], { siblings: PLAN5, week: 0, phase: "home" });
+    assert.deepEqual(monday.abs.map((move) => move.name), [
+      "Dead bug",
+      "Reverse crunch on the bench",
+      "Weighted bench crunch",
+    ]);
+    assert.equal(monday.workout.some((move) => /dead bug/i.test(move.name)), false);
+    assert.match(monday.absNote, /10–15 minutes/);
+    assert.match(monday.absNote, /add reps/i);
+    assert.match(monday.absNote, /elbow pads/);
+    assert.equal(monday.abs[1].forearm, true);
+    assert.match(monday.abs[1].videoUrl, /watch\?v=-zcoF6AFgaI/);
+    assert.match(monday.abs[1].forearmNote ?? "", /bench/);
+    const slowed = dayOutline(PLAN5[0], { siblings: PLAN5, week: 5, phase: "home" });
+    assert.match(slowed.abs[0].prescription, /3 seconds/);
+    const tuesday = dayOutline(PLAN5[1], { siblings: PLAN5, week: 0, phase: "home" });
+    assert.equal(tuesday.abs[0].name, "Side plank on forearm");
+    assert.equal(tuesday.workout.some((move) => /side plank/i.test(move.name)), false);
+    const gym = dayOutline(GYM5[0], { siblings: GYM5, week: 8, phase: "gym" });
+    assert.equal(gym.abs.some((move) => move.name === "Cable crunch" || move.name === "Captain's chair knee raise"), false);
+    const fridayGym = dayOutline(GYM5[4], { siblings: GYM5, week: 0, phase: "gym" });
+    assert.ok(fridayGym.abs.some((move) => /Cable crunch|Captain/.test(move.name)));
   });
 
   it("flags grip and pressing moves for the forearm plates", () => {
@@ -165,13 +200,34 @@ describe("logging helpers", () => {
     assert.equal(data.checkins[0]?.weight, "191");
     assert.equal(data.checkins[0]?.steps, "8000");
   });
+
+  it("reads the 12 month abs roadmap from the 7 day average", () => {
+    const road = absRoadmap(
+      [
+        { date: "2026-11-01", weight: "190", steps: "", calories: "" },
+        { date: "2026-11-02", weight: "188", steps: "", calories: "" },
+      ],
+      "2026-06-01",
+      "2026-11-02",
+    );
+    assert.equal(road.phase, 1);
+    assert.equal(road.hasLog, true);
+    assert.equal(road.average, 189);
+    assert.equal(road.inBand, false);
+    const early = absRoadmap([], "2026-11-01", "2026-11-20");
+    assert.equal(early.phase, 0);
+    assert.equal(early.percent, 0);
+  });
 });
 
 describe("library", () => {
   it("puts warm-ups, strength, stretches, and movement breaks in one list", () => {
     const entries = libraryEntries();
     assert.equal(entries.filter((entry) => entry.group === "Warm-up").length, 3);
-    assert.equal(entries.filter((entry) => entry.group === "Strength").length, LIB.length);
+    assert.equal(entries.filter((entry) => entry.group === "Strength").length, LIB.length - 2);
+    assert.equal(entries.filter((entry) => entry.group === "Abs & core").length, 10);
+    assert.equal(filterLibrary(entries, "Abs & core", "hollow")[0]?.name, "Hollow hold");
+    assert.equal(filterLibrary(entries, "Strength", "dead bug").length, 0);
     assert.equal(entries.filter((entry) => entry.group === "Stretches").length, STRETCHES.length);
     assert.equal(entries.filter((entry) => entry.group === "Movement breaks").length, 3);
     const pushups = filterLibrary(entries, "Movement breaks", "push");

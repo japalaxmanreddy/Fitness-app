@@ -238,6 +238,21 @@ export const ANIMS: Record<string, Anim> = {
     a: pose({ h: [100, 36], s: [100, 52], p: [100, 96], e: [78, 66], w: [70, 74], k: [104, 124], f: [104, 150] }),
     b: pose({ h: [100, 36], s: [100, 52], p: [100, 92], e: [78, 66], w: [70, 74], k: [120, 96], f: [120, 74] }),
   },
+  legRaise: {
+    ground: true,
+    a: pose({ h: [150, 138], s: [136, 144], p: [108, 148], e: [124, 154], w: [112, 156], k: [100, 140], f: [92, 156] }),
+    b: pose({ h: [150, 138], s: [136, 144], p: [108, 148], e: [124, 154], w: [112, 156], k: [108, 110], f: [108, 78] }),
+  },
+  bicycle: {
+    ground: true,
+    a: pose({ h: [138, 124], s: [128, 136], p: [104, 148], e: [116, 118], w: [132, 108], k: [92, 124], f: [78, 140], k2: [120, 132], f2: [138, 118] }),
+    b: pose({ h: [138, 124], s: [128, 136], p: [104, 148], e: [148, 118], w: [132, 108], k: [120, 124], f: [136, 140], k2: [92, 132], f2: [74, 118] }),
+  },
+  hollow: {
+    ground: true,
+    a: pose({ h: [146, 132], s: [132, 142], p: [108, 148], e: [118, 150], w: [104, 154], k: [96, 132], f: [88, 118] }),
+    b: pose({ h: [154, 128], s: [140, 140], p: [112, 148], e: [150, 132], w: [162, 118], k: [100, 140], f: [88, 132] }),
+  },
 };
 
 export const ANIM_KEYS = [
@@ -274,6 +289,9 @@ export const ANIM_KEYS = [
   "dbCrunch",
   "twist",
   "captain",
+  "legRaise",
+  "bicycle",
+  "hollow",
 ] as const;
 
 export function animFor(name: string): string {
@@ -282,6 +300,9 @@ export function animFor(name: string): string {
   if (n.includes("weighted bench crunch") || n.includes("cable crunch")) return "dbCrunch";
   if (n.includes("russian twist")) return "twist";
   if (n.includes("captain")) return "captain";
+  if (n.includes("leg raise")) return "legRaise";
+  if (n.includes("bicycle")) return "bicycle";
+  if (n.includes("hollow")) return "hollow";
   if (n.includes("arm circle")) return "circles";
   if (n.includes("walk") || n.includes("run")) return "walk";
   if (n.includes("bodyweight squat")) return "airSquat";
