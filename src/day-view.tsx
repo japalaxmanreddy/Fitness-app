@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { FOREARM_PLATE_NOTE, dayOutline, type DayMove } from "./day-plan";
 import { Demo } from "./demo";
-import type { PlanDay } from "./data";
+import { planFor, type PlanDay } from "./data";
+import { todayISO } from "./dates";
 import { animFor } from "./motion";
+import { eveningCopy } from "./runs";
+import { useStore } from "./store";
 import { HowTo } from "./youtube";
 
 export function MoveCard({ move, initiallyOpen = false }: { move: DayMove; initiallyOpen?: boolean }) {
@@ -52,7 +55,10 @@ function Block({ title, note, moves }: { title: string; note: string; moves: Day
 }
 
 export function DayBody({ day, log }: { day: PlanDay; log: ReactNode }) {
+  const { data } = useStore();
   const outline = dayOutline(day);
+  const plan = planFor(data.profile.phase, data.profile.days);
+  const snacks = outline.snacks.map((move) => (move.name.startsWith("Evening") ? eveningCopy(plan, day, data.runs, todayISO()) : move));
   return (
     <div className="stack">
       <Block
@@ -77,7 +83,7 @@ export function DayBody({ day, log }: { day: PlanDay; log: ReactNode }) {
       <Block
         title="Throughout the day"
         note="Two or three easy breaks. The strength ones are about half of a max set."
-        moves={outline.snacks}
+        moves={snacks}
       />
     </div>
   );

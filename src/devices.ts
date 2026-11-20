@@ -1,4 +1,6 @@
 import { deviceWorkerUrl, devicesConfigured } from "./device-config";
+import { addDays } from "./dates";
+import type { SyncedActivity } from "./runs";
 import type { SyncedDay } from "./sync-merge";
 
 const DEVICE_ID_KEY = "fitness-device-id";
@@ -10,6 +12,7 @@ export type DeviceLinks = { withings: boolean; fitbit: boolean };
 
 export type SyncPayload = {
   days: SyncedDay[];
+  activities: SyncedActivity[] | null;
   connected: DeviceLinks;
   warnings: string[];
 };
@@ -72,7 +75,16 @@ function mockPayload(): SyncPayload {
     day.activitySource = "fitbit";
     day.sleepSource = "fitbit";
   }
-  return { days: connected.withings || connected.fitbit ? [day] : [], connected, warnings: [] };
+  const activities = connected.fitbit ? sampleActivities(date) : null;
+  return { days: connected.withings || connected.fitbit ? [day] : [], activities, connected, warnings: [] };
+}
+
+function sampleActivities(date: string): SyncedActivity[] {
+  return [
+    { id: "fitbit:sample-1", date: addDays(date, -1), start: "18:10", distanceMi: 2.1, durationMin: 28, kind: "run", avgHr: 152, calories: 240, steps: 3600, elevationFt: 40, zones: { fatBurn: 8, cardio: 16, peak: 2 } },
+    { id: "fitbit:sample-2", date: addDays(date, -2), start: "19:00", distanceMi: 2, durationMin: 34, kind: "walk", avgHr: 118, calories: 160, steps: 4000 },
+    { id: "fitbit:sample-3", date: addDays(date, -6), start: "18:05", distanceMi: 2, durationMin: 26, kind: "run", avgHr: 148, calories: 230, steps: 3400 },
+  ];
 }
 
 async function request(path: string, init?: RequestInit): Promise<Response> {
@@ -132,6 +144,7 @@ export async function syncDevices(days = 30): Promise<SyncPayload> {
   rememberSync();
   return {
     days: Array.isArray(body.days) ? body.days : [],
+    activities: Array.isArray(body.activities) ? body.activities : null,
     connected: { withings: Boolean(body.connected?.withings), fitbit: Boolean(body.connected?.fitbit) },
     warnings: Array.isArray(body.warnings) ? body.warnings : [],
   };

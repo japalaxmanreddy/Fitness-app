@@ -1,4 +1,4 @@
-import { combineDays, parseFitbitHeart, parseFitbitSeries, parseFitbitSleep, parseFitbitWeight, parseWithingsActivity, parseWithingsMeasures, parseWithingsSleep, type SyncedDay } from "./normalize";
+import { combineDays, parseFitbitActivities, parseFitbitHeart, parseFitbitSeries, parseFitbitSleep, parseFitbitWeight, parseWithingsActivity, parseWithingsMeasures, parseWithingsSleep, type FitbitActivity, type SyncedDay } from "./normalize";
 
 export interface Env {
   TOKENS: KVNamespace;
@@ -160,6 +160,7 @@ async function sync(request: Request, env: Env): Promise<Response> {
   const days = Math.min(30, Math.max(1, Number(new URL(request.url).searchParams.get("days") ?? 30) || 30));
   const warnings: string[] = [];
   const emptyMaps = blankMaps();
+  let activities: FitbitActivity[] | null = null;
   let withings = false;
   let fitbit = false;
   if (await env.TOKENS.get(tokenKey(deviceId, "withings"))) {
@@ -173,13 +174,16 @@ async function sync(request: Request, env: Env): Promise<Response> {
   if (await env.TOKENS.get(tokenKey(deviceId, "fitbit"))) {
     fitbit = true;
     try {
-      Object.assign(emptyMaps, await fetchFitbit(env, deviceId, days));
+      const fitbitData = await fetchFitbit(env, deviceId, days);
+      Object.assign(emptyMaps, fitbitData.maps);
+      activities = fitbitData.activities;
+      if (fitbitData.activityWarning) warnings.push(fitbitData.activityWarning);
     } catch (error) {
       warnings.push(error instanceof Error ? error.message : "Fitbit sync failed.");
     }
   }
   const records: SyncedDay[] = combineDays(emptyMaps);
-  return json({ days: records, connected: { withings, fitbit }, warnings });
+  return json({ days: records, activities, connected: { withings, fitbit }, warnings });
 }
 
 function blankMaps() {
@@ -321,15 +325,42 @@ async function fetchFitbit(env: Env, deviceId: string, days: number) {
     get(`/1.2/user/-/sleep/date/${window.start}/${window.end}.json`),
     get(`/1/user/-/body/log/weight/date/${window.start}/${window.end}.json`),
   ]);
+  let activities: FitbitActivity[] | null = null;
+  let activityWarning = "";
+  try {
+    activities = await fetchFitbitActivities(get, window.start);
+  } catch (error) {
+    activityWarning = error instanceof Error ? error.message : "Fitbit runs could not be read.";
+  }
   return {
-    fitbitSteps: parseFitbitSeries(steps["activities-steps"] as { dateTime?: string; value?: string }[]),
-    fitbitCalories: parseFitbitSeries(calories["activities-calories"] as { dateTime?: string; value?: string }[]),
-    fitbitFairly: parseFitbitSeries(fairly["activities-minutesFairlyActive"] as { dateTime?: string; value?: string }[]),
-    fitbitVery: parseFitbitSeries(very["activities-minutesVeryActive"] as { dateTime?: string; value?: string }[]),
-    fitbitHeart: parseFitbitHeart(heart["activities-heart"] as { dateTime?: string; value?: { restingHeartRate?: number } }[]),
-    fitbitSleep: parseFitbitSleep(sleep.sleep as { dateOfSleep?: string; minutesAsleep?: number }[]),
-    fitbitWeight: parseFitbitWeight(weight.weight as { date?: string; weight?: number }[]),
+    maps: {
+      fitbitSteps: parseFitbitSeries(steps["activities-steps"] as { dateTime?: string; value?: string }[]),
+      fitbitCalories: parseFitbitSeries(calories["activities-calories"] as { dateTime?: string; value?: string }[]),
+      fitbitFairly: parseFitbitSeries(fairly["activities-minutesFairlyActive"] as { dateTime?: string; value?: string }[]),
+      fitbitVery: parseFitbitSeries(very["activities-minutesVeryActive"] as { dateTime?: string; value?: string }[]),
+      fitbitHeart: parseFitbitHeart(heart["activities-heart"] as { dateTime?: string; value?: { restingHeartRate?: number } }[]),
+      fitbitSleep: parseFitbitSleep(sleep.sleep as { dateOfSleep?: string; minutesAsleep?: number }[]),
+      fitbitWeight: parseFitbitWeight(weight.weight as { date?: string; weight?: number }[]),
+    },
+    activities,
+    activityWarning,
   };
+}
+
+async function fetchFitbitActivities(
+  get: (path: string) => Promise<Record<string, unknown>>,
+  afterDate: string,
+): Promise<FitbitActivity[]> {
+  const activities: FitbitActivity[] = [];
+  let offset = 0;
+  for (let page = 0; page < 5; page += 1) {
+    const body = await get(`/1/user/-/activities/list.json?afterDate=${afterDate}&sort=asc&offset=${offset}&limit=100`);
+    const raw = Array.isArray(body.activities) ? body.activities : [];
+    activities.push(...parseFitbitActivities({ activities: raw as Record<string, unknown>[] }));
+    if (raw.length < 100) break;
+    offset += 100;
+  }
+  return activities;
 }
 
 function base64url(bytes: Uint8Array): string {

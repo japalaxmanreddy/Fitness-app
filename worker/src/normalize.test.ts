@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { combineDays, kgToLb, parseWithingsMeasures, withingsValue } from "./normalize.ts";
+import { combineDays, kgToLb, parseFitbitActivities, parseWithingsMeasures, withingsValue } from "./normalize.ts";
 
 describe("withings numbers", () => {
   it("applies the unit exponent and converts kilograms to pounds", () => {
@@ -34,5 +34,62 @@ describe("withings numbers", () => {
     assert.equal(days[0].activeMinutes, 30);
     assert.equal(days[0].restingHr, 61);
     assert.equal(days[0].sleepMinutes, 420);
+  });
+});
+
+describe("fitbit activity list", () => {
+  it("keeps run and walk entries and converts kilometers", () => {
+    const activities = parseFitbitActivities({
+      activities: [
+        {
+          logId: 99,
+          activityName: "Run",
+          startTime: "2026-11-18T18:05:00.000-05:00",
+          duration: 1800000,
+          distance: 5,
+          distanceUnit: "Kilometer",
+          averageHeartRate: 150,
+          calories: 320,
+          steps: 4200,
+          elevationGain: 12,
+          heartRateZones: [
+            { name: "Out of Range", minutes: 1 },
+            { name: "Fat Burn", minutes: 10 },
+            { name: "Cardio", minutes: 18 },
+            { name: "Peak", minutes: 1 },
+          ],
+        },
+        {
+          logId: 100,
+          activityName: "Bike",
+          startTime: "2026-11-18T12:00:00.000-05:00",
+          duration: 600000,
+          distance: 3,
+          distanceUnit: "Kilometer",
+        },
+        {
+          logId: 101,
+          activityName: "Outdoor Walk",
+          startTime: "2026-11-17T07:30:00.000-05:00",
+          duration: 1200000,
+          distance: 1.5,
+          distanceUnit: "Mile",
+          averageHeartRate: 110,
+        },
+      ],
+    });
+    assert.equal(activities.length, 2);
+    assert.equal(activities[0].kind, "run");
+    assert.equal(activities[0].date, "2026-11-18");
+    assert.equal(activities[0].start, "18:05");
+    assert.equal(activities[0].durationMin, 30);
+    assert.equal(activities[0].distanceMi, 3.11);
+    assert.equal(activities[0].avgHr, 150);
+    assert.equal(activities[0].calories, 320);
+    assert.equal(activities[0].steps, 4200);
+    assert.equal(activities[0].elevationFt, 39);
+    assert.equal(activities[0].zones?.cardio, 18);
+    assert.equal(activities[1].kind, "walk");
+    assert.equal(activities[1].distanceMi, 1.5);
   });
 });

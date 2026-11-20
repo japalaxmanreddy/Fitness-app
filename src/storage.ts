@@ -1,4 +1,5 @@
 import { todayISO } from "./dates.ts";
+import { normalizeRun, type RunLog } from "./runs.ts";
 
 export type Phase = "home" | "gym";
 export type PlanDays = "3" | "4" | "5";
@@ -62,6 +63,7 @@ export type Data = {
   profile: Profile;
   checkins: CheckIn[];
   workouts: WorkoutLog[];
+  runs: RunLog[];
 };
 
 export const STORAGE_KEY = "fitness-data-v1";
@@ -82,7 +84,7 @@ export function defaultProfile(today = todayISO()): Profile {
 }
 
 export function defaultData(): Data {
-  return { profile: defaultProfile(), checkins: [], workouts: [] };
+  return { profile: defaultProfile(), checkins: [], workouts: [], runs: [] };
 }
 
 function asString(value: unknown): string {
@@ -194,13 +196,20 @@ export function normalize(raw: unknown): Data {
   profile.dismissedInstall = Boolean(profile.dismissedInstall);
   const checkins = Array.isArray(row.checkins) ? row.checkins.map(normalizeCheckin).filter((item): item is CheckIn => item !== null) : [];
   const workouts = Array.isArray(row.workouts) ? row.workouts.map(normalizeWorkout).filter((item): item is WorkoutLog => item !== null) : [];
+  const runs = Array.isArray(row.runs) ? row.runs.map(normalizeRun).filter((item): item is RunLog => item !== null) : [];
   const seen = new Set<string>();
   const uniqueCheckins = checkins.filter((item) => {
     if (seen.has(item.date)) return false;
     seen.add(item.date);
     return true;
   });
-  return { profile, checkins: uniqueCheckins, workouts };
+  const seenRuns = new Set<string>();
+  const uniqueRuns = runs.filter((item) => {
+    if (seenRuns.has(item.id)) return false;
+    seenRuns.add(item.id);
+    return true;
+  });
+  return { profile, checkins: uniqueCheckins, workouts, runs: uniqueRuns };
 }
 
 export function loadData(): Data {
@@ -225,7 +234,7 @@ export function saveData(data: Data): string | null {
 export function parseBackup(raw: unknown): Data {
   if (!raw || typeof raw !== "object") throw new Error("That file is not a fitness backup.");
   const row = raw as Record<string, unknown>;
-  if (!("profile" in row) && !("checkins" in row) && !("workouts" in row)) {
+  if (!("profile" in row) && !("checkins" in row) && !("workouts" in row) && !("runs" in row)) {
     throw new Error("That file is not a fitness backup.");
   }
   return normalize(raw);
@@ -239,6 +248,7 @@ export function backupPayload(data: Data): string {
       profile: data.profile,
       checkins: data.checkins,
       workouts: data.workouts,
+      runs: data.runs,
     },
     null,
     2,

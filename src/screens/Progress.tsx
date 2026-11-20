@@ -3,6 +3,7 @@ import type { CheckIn, MetricSource } from "../storage";
 import { StepsChart, WeightChart } from "../chart";
 import { addDays, diffDays, formatPretty, todayISO } from "../dates";
 import { planWeight } from "../data";
+import { FAST_LOSS_NOTE, TWO_WEEK_RISE_NOTE, describeWeek, weeklyAverages, weighPoints } from "../weight-trend";
 import { formatSets, setsHaveData } from "../log";
 import { useStore } from "../store";
 import { backupPayload, parseBackup } from "../storage";
@@ -25,6 +26,7 @@ export function Progress() {
     recentWeights.length > 0
       ? recentWeights.reduce((sum, item) => sum + Number(item.weight), 0) / recentWeights.length
       : null;
+  const weekTrend = describeWeek(weeklyAverages(weighPoints(data.checkins)));
   const weekIndex = Math.max(0, Math.min(18, Math.floor(diffDays(data.profile.planStart, today) / 7)));
   const plannedNow = diffDays(data.profile.planStart, today) < 0 ? 195 : planWeight(weekIndex);
   const workouts = useMemo(
@@ -95,7 +97,16 @@ export function Progress() {
             <p className="metric-label">7-day average</p>
             <p className="metric-detail">{recentWeights.length ? `${recentWeights.length} weigh-in${recentWeights.length === 1 ? "" : "s"}` : "No weigh-ins yet"}</p>
           </article>
+          <article className="metric">
+            <p className="metric-value">{weekTrend.change === null ? "—" : `${weekTrend.change > 0 ? "+" : ""}${weekTrend.change.toFixed(1)}`}</p>
+            <p className="metric-label">Weekly average change</p>
+            <p className="metric-detail">
+              {weekTrend.current ? `${weekTrend.current.average.toFixed(1)} lb this week` : "Need two weeks of weigh-ins"}
+            </p>
+          </article>
         </div>
+        {weekTrend.flag === "fast" ? <p className="note warn-text">{FAST_LOSS_NOTE}</p> : null}
+        {weekTrend.flag === "up" ? <p className="note">{TWO_WEEK_RISE_NOTE}</p> : null}
         <Field label="Plan start" type="date" value={data.profile.planStart} onChange={(planStart) => setProfile({ planStart })} />
         <p className="note">Week 0 is {formatPretty(data.profile.planStart)}. Week 18 is {formatPretty(addDays(data.profile.planStart, 126))} at 177 lb.</p>
       </section>
