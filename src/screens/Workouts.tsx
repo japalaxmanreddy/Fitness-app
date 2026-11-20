@@ -116,7 +116,7 @@ export function Workouts() {
           );
         })}
       </div>
-      <p className="note">Each lifting session takes about 45 to 55 minutes, including the warm-up and cool-down. Open a move for the animation, the cues, and the how-to video. The Exercises tab is still there as the full library.</p>
+      <p className="note">Each lifting session takes about 45 to 55 minutes, including the warm-up and cool-down. Open a move for the animation, the cues, and the how-to video. The Library tab has every move in one list.</p>
 
       <details className="guide">
         <summary>How to progress</summary>

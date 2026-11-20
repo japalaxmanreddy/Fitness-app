@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { formatLong } from "./dates";
-import { Exercises } from "./screens/Exercises";
+import { Library } from "./screens/Library";
 import { Progress } from "./screens/Progress";
-import { Stretch } from "./screens/Stretch";
 import { Today } from "./screens/Today";
 import { Workouts } from "./screens/Workouts";
 import { useStore } from "./store";
@@ -12,8 +11,7 @@ import { Icon } from "./ui";
 const TABS = [
   { id: "today", label: "Today" },
   { id: "workouts", label: "Workouts" },
-  { id: "exercises", label: "Exercises" },
-  { id: "stretch", label: "Stretch" },
+  { id: "library", label: "Library" },
   { id: "progress", label: "Progress" },
 ] as const;
 
@@ -21,6 +19,7 @@ type TabId = (typeof TABS)[number]["id"];
 
 function tabFromHash(): TabId {
   const hash = location.hash.replace("#", "");
+  if (hash === "exercises" || hash === "stretch") return "library";
   return TABS.some((tab) => tab.id === hash) ? (hash as TabId) : "today";
 }
 
@@ -40,7 +39,12 @@ export function App() {
   const dark = isDark(data.profile.theme);
 
   useEffect(() => {
-    const onHash = () => setTab(tabFromHash());
+    const onHash = () => {
+      const hash = location.hash.replace("#", "");
+      if (hash === "exercises" || hash === "stretch") history.replaceState(null, "", "#library");
+      setTab(tabFromHash());
+    };
+    onHash();
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
@@ -86,8 +90,7 @@ export function App() {
       <main id="content" className="main">
         {tab === "today" ? <Today /> : null}
         {tab === "workouts" ? <Workouts /> : null}
-        {tab === "exercises" ? <Exercises /> : null}
-        {tab === "stretch" ? <Stretch /> : null}
+        {tab === "library" ? <Library /> : null}
         {tab === "progress" ? <Progress /> : null}
       </main>
       <nav className="tabbar" aria-label="Primary">

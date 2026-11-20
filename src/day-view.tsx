@@ -1,15 +1,24 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { FOREARM_PLATE_NOTE, dayOutline, type DayMove } from "./day-plan";
 import { Demo } from "./demo";
 import type { PlanDay } from "./data";
 import { animFor } from "./motion";
 import { HowTo } from "./youtube";
 
-function MoveCard({ move }: { move: DayMove }) {
-  const [open, setOpen] = useState(false);
+export function MoveCard({ move, initiallyOpen = false }: { move: DayMove; initiallyOpen?: boolean }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+  const [open, setOpen] = useState(initiallyOpen);
+  useEffect(() => {
+    if (!initiallyOpen || !ref.current) return;
+    ref.current.open = true;
+    setOpen(true);
+    ref.current.scrollIntoView({ block: "start" });
+  }, [initiallyOpen]);
   return (
     <details
       className="move"
+      ref={ref}
+      open={open}
       onToggle={(event) => setOpen((event.currentTarget as HTMLDetailsElement).open)}
     >
       <summary>
