@@ -104,6 +104,77 @@ export function parseFitbitSleep(sleep: { dateOfSleep?: string; minutesAsleep?: 
   return days;
 }
 
+export type FitbitActivity = {
+  id: string;
+  date: string;
+  start: string;
+  distanceMi: number;
+  durationMin: number;
+  kind: "run" | "walk";
+  avgHr?: number;
+  calories?: number;
+  steps?: number;
+  elevationFt?: number;
+  zones?: { out?: number; fatBurn?: number; cardio?: number; peak?: number };
+};
+
+const KM_TO_MI = 0.621371;
+const M_TO_FT = 3.28084;
+
+function activityKind(name: string): "run" | "walk" | null {
+  const text = name.toLowerCase();
+  if (/bike|swim|yoga|weight|workout|sport/.test(text)) return null;
+  if (/walk|hike/.test(text)) return "walk";
+  if (/run|jog|treadmill/.test(text)) return "run";
+  return null;
+}
+
+function zoneMinutes(zones: { name?: string; minutes?: number }[] | undefined, label: string): number | undefined {
+  const match = zones?.find((zone) => (zone.name ?? "").toLowerCase() === label);
+  return match && Number.isFinite(match.minutes) ? match.minutes : undefined;
+}
+
+export function parseFitbitActivities(body: { activities?: Record<string, unknown>[] } | undefined): FitbitActivity[] {
+  const activities: FitbitActivity[] = [];
+  for (const row of body?.activities ?? []) {
+    const kind = activityKind(String(row.activityName ?? ""));
+    const startTime = String(row.startTime ?? "");
+    const distance = Number(row.distance);
+    const duration = Number(row.duration);
+    if (!kind || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(startTime) || !Number.isFinite(distance) || distance <= 0 || !Number.isFinite(duration) || duration <= 0) {
+      continue;
+    }
+    const unit = String(row.distanceUnit ?? "").toLowerCase();
+    const miles = unit.startsWith("k") ? distance * KM_TO_MI : distance;
+    const zones = Array.isArray(row.heartRateZones) ? (row.heartRateZones as { name?: string; minutes?: number }[]) : undefined;
+    const hr = Number(row.averageHeartRate);
+    const calories = Number(row.calories);
+    const steps = Number(row.steps);
+    const elevation = Number(row.elevationGain);
+    const parsedZones = {
+      out: zoneMinutes(zones, "out of range"),
+      fatBurn: zoneMinutes(zones, "fat burn"),
+      cardio: zoneMinutes(zones, "cardio"),
+      peak: zoneMinutes(zones, "peak"),
+    };
+    const hasZone = Object.values(parsedZones).some((value) => value !== undefined);
+    activities.push({
+      id: `fitbit:${String(row.logId ?? startTime)}`,
+      date: startTime.slice(0, 10),
+      start: startTime.slice(11, 16),
+      distanceMi: Math.round(miles * 100) / 100,
+      durationMin: Math.round((duration / 60000) * 10) / 10,
+      kind,
+      avgHr: Number.isFinite(hr) && hr > 0 ? hr : undefined,
+      calories: Number.isFinite(calories) && calories > 0 ? calories : undefined,
+      steps: Number.isFinite(steps) && steps > 0 ? steps : undefined,
+      elevationFt: Number.isFinite(elevation) && elevation > 0 ? Math.round(elevation * M_TO_FT) : undefined,
+      zones: hasZone ? parsedZones : undefined,
+    });
+  }
+  return activities;
+}
+
 export function parseFitbitWeight(rows: { date?: string; weight?: number }[] | undefined): Map<string, number> {
   const days = new Map<string, number>();
   for (const row of rows ?? []) {

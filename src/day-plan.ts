@@ -143,8 +143,8 @@ function snacks(): DayMove[] {
     },
     {
       name: "Evening · Easy walk",
-      prescription: "10–15 min, easy pace",
-      cue: "A short walk in the evening. Conversational pace, not a workout.",
+      prescription: "Distance for this week is on the Running tab",
+      cue: "Easy walk the night before a leg day and the evening of a leg day. Hard runs sit on other evenings. Keep an easy night's average heart rate under about 145 bpm. Raise weekly distance by about 10% at most, and walk if sleep gets worse after a hard run.",
       videoUrl: "",
       videoSite: "",
       forearm: false,

@@ -56,7 +56,9 @@ If the Cloudflare secrets are missing, this workflow skips itself. The normal Pa
 
 The band, including one named Fitbit Air, syncs to the Fitbit app on the phone. This site does not talk to the band over Bluetooth. It reads the Fitbit account after the band has synced.
 
-Use the Fitbit Web API, not Google Fit. Google closed the Google Fit APIs. Fitbit’s own API at `api.fitbit.com` is still the one for a Fitbit account. This app asks only for daily totals (steps, calories, active minutes, resting heart rate, sleep, weight). It does not ask for minute-by-minute intraday data, which Fitbit reviews separately. If Google moves the developer site, start at [dev.fitbit.com](https://dev.fitbit.com/).
+Use the Fitbit Web API, not Google Fit. Google closed the Google Fit APIs. Fitbit’s own API at `api.fitbit.com` is still the one for a Fitbit account. This app asks for daily totals (steps, calories, active minutes, resting heart rate, sleep, weight) and for each Run or Walk on the activity list. It does not ask for minute-by-minute intraday data, which Fitbit reviews separately. If Google moves the developer site, start at [dev.fitbit.com](https://dev.fitbit.com/).
+
+Runs and walks come from `GET /1/user/-/activities/list.json`. For each Run or Walk the Worker keeps the date and start time, distance, duration, average heart rate, calories, steps, elevation, and heart-rate zone minutes. Pace is distance divided by time. The `activity` and `heartrate` scopes already cover that list, so this app does not add the `location` scope. Distance is stored on the activity itself, including a treadmill entry that has no GPS track. The location scope would only add the GPS path, which this app does not draw. A band with no GPS still shows distance when Fitbit saved it on the activity. People who already connected Fitbit do not need to sign in again for this.
 
 1. Open [dev.fitbit.com/apps/new](https://dev.fitbit.com/apps/new) while signed into the Fitbit account that owns the band.
 2. Fill the form:
@@ -81,4 +83,4 @@ Use the Fitbit Web API, not Google Fit. Google closed the Google Fit APIs. Fitbi
 5. On the iPhone, open the fitness app, go to **Progress**, and tap **Connect** for Withings, then Fitbit. Sign in, and you come back to Progress.
 6. Tap **Sync now**. After that, the app syncs by itself at most every six hours.
 
-Weight from Withings is kept ahead of Fitbit. Steps, calories, heart rate, and sleep from Fitbit are kept ahead of Withings. A number you typed in the app is never replaced.
+Weight from Withings is kept ahead of Fitbit. Steps, calories, heart rate, and sleep from Fitbit are kept ahead of Withings. A number you typed in the app is never replaced. A run or walk you type on the Running tab is kept ahead of a Fitbit entry on the same date with a start time within 20 minutes.

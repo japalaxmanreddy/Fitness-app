@@ -2,6 +2,7 @@ import { useState } from "react";
 import { energyNeeds, inchesToFeet, proteinGrams } from "../calc";
 import { todayISO } from "../dates";
 import { PROTEIN_FOODS, planFor, suggestedDay } from "../data";
+import { todayRunSummary } from "../runs";
 import { goTo } from "../nav";
 import { useStore } from "../store";
 import { Field, Metric, PropList, SelectField } from "../ui";
@@ -27,6 +28,7 @@ export function Today() {
   const [message, setMessage] = useState("");
   const plan = planFor(profile.phase, profile.days);
   const todayPlan = suggestedDay(plan);
+  const running = todayRunSummary(plan, data.runs, todayISO());
   const standalone =
     window.matchMedia("(display-mode: standalone)").matches ||
     ("standalone" in navigator && (navigator as Navigator & { standalone?: boolean }).standalone === true);
@@ -150,6 +152,17 @@ export function Today() {
           ) : null}
         </div>
         {message ? <p className="note">{message}</p> : null}
+      </section>
+
+      <section className="card stack">
+        <h2>Running this week</h2>
+        <p className="metric-value">{running.title}</p>
+        <p className="note">{running.detail}</p>
+        {running.note ? <p className="note">{running.note}</p> : null}
+        {running.hr ? <p className="note">{running.hr}</p> : null}
+        <button type="button" className="btn" onClick={() => goTo("running")}>
+          Open running
+        </button>
       </section>
 
       {todayPlan ? (

@@ -9,6 +9,7 @@ import {
   type Profile,
   type WorkoutLog,
 } from "./storage";
+import type { RunLog } from "./runs";
 
 type Store = {
   data: Data;
@@ -20,6 +21,9 @@ type Store = {
   removeWorkout: (id: string) => void;
   replaceAll: (data: Data) => void;
   setCheckins: (checkins: CheckIn[]) => void;
+  setRuns: (runs: RunLog[]) => void;
+  upsertRun: (run: RunLog) => void;
+  removeRun: (id: string) => void;
 };
 
 const StoreContext = createContext<Store | null>(null);
@@ -96,6 +100,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [commit],
   );
 
+  const setRuns = useCallback(
+    (runs: RunLog[]) => {
+      setData((prev) => commit({ ...prev, runs }));
+    },
+    [commit],
+  );
+
+  const upsertRun = useCallback(
+    (run: RunLog) => {
+      setData((prev) => {
+        const runs = prev.runs.some((item) => item.id === run.id)
+          ? prev.runs.map((item) => (item.id === run.id ? run : item))
+          : [...prev.runs, run];
+        return commit({ ...prev, runs });
+      });
+    },
+    [commit],
+  );
+
+  const removeRun = useCallback(
+    (id: string) => {
+      setData((prev) => commit({ ...prev, runs: prev.runs.filter((item) => item.id !== id) }));
+    },
+    [commit],
+  );
+
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (event.key !== STORAGE_KEY || !event.newValue) return;
@@ -110,8 +140,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ data, saveError, setProfile, upsertCheckin, removeCheckin, upsertWorkout, removeWorkout, replaceAll, setCheckins }),
-    [data, saveError, setProfile, upsertCheckin, removeCheckin, upsertWorkout, removeWorkout, replaceAll, setCheckins],
+    () => ({ data, saveError, setProfile, upsertCheckin, removeCheckin, upsertWorkout, removeWorkout, replaceAll, setCheckins, setRuns, upsertRun, removeRun }),
+    [data, saveError, setProfile, upsertCheckin, removeCheckin, upsertWorkout, removeWorkout, replaceAll, setCheckins, setRuns, upsertRun, removeRun],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

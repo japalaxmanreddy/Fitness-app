@@ -1,22 +1,23 @@
 import { addDays, diffDays, formatPretty, parseISODate } from "./dates";
 import { planWeight } from "./data";
 import type { CheckIn } from "./storage";
+import { rollingAverages, weighPoints } from "./weight-trend";
 
 export function WeightChart({ planStart, checkins }: { planStart: string; checkins: CheckIn[] }) {
-  const actual = checkins
-    .map((item) => ({
-      date: item.date,
-      lb: Number(item.weight),
-      week: diffDays(planStart, item.date) / 7,
-    }))
-    .filter((point) => Number.isFinite(point.lb) && point.lb > 0)
-    .sort((a, b) => a.week - b.week);
+  const actual = weighPoints(checkins).map((point) => ({
+    ...point,
+    week: diffDays(planStart, point.date) / 7,
+  }));
+  const averaged = rollingAverages(weighPoints(checkins)).map((point) => ({
+    ...point,
+    week: diffDays(planStart, point.date) / 7,
+  }));
 
   let minWeek = 0;
   let maxWeek = 18;
   let floor = 174;
   let ceiling = 197;
-  for (const point of actual) {
+  for (const point of [...actual, ...averaged]) {
     minWeek = Math.min(minWeek, Math.floor(point.week));
     maxWeek = Math.max(maxWeek, Math.ceil(point.week));
     if (point.lb < floor) floor = Math.floor(point.lb) - 2;
@@ -38,9 +39,9 @@ export function WeightChart({ planStart, checkins }: { planStart: string; checki
   const planPath = plan
     .map((week, index) => `${index === 0 ? "M" : "L"}${x(week).toFixed(1)},${y(planWeight(week)).toFixed(1)}`)
     .join(" ");
-  const actualPath =
-    actual.length > 1
-      ? actual.map((point, index) => `${index === 0 ? "M" : "L"}${x(point.week).toFixed(1)},${y(point.lb).toFixed(1)}`).join(" ")
+  const averagePath =
+    averaged.length > 1
+      ? averaged.map((point, index) => `${index === 0 ? "M" : "L"}${x(point.week).toFixed(1)},${y(point.lb).toFixed(1)}`).join(" ")
       : "";
   const ticks = [195, 186, 177].filter((value) => value >= floor && value <= ceiling);
   if (ticks.length === 0) {
@@ -61,9 +62,9 @@ export function WeightChart({ planStart, checkins }: { planStart: string; checki
           </g>
         ))}
         <path d={planPath} fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinejoin="round" />
-        {actualPath ? <path d={actualPath} fill="none" stroke="var(--good)" strokeWidth="2.25" strokeLinejoin="round" /> : null}
+        {averagePath ? <path d={averagePath} fill="none" stroke="var(--ink)" strokeWidth="2.5" strokeLinejoin="round" /> : null}
         {actual.map((point) => (
-          <circle key={point.date} cx={x(point.week)} cy={y(point.lb)} r="3.6" fill="var(--good)">
+          <circle key={point.date} cx={x(point.week)} cy={y(point.lb)} r="2.4" fill="var(--good)" opacity="0.45">
             <title>
               {formatPretty(point.date)}: {point.lb} lb
             </title>
@@ -87,7 +88,10 @@ export function WeightChart({ planStart, checkins }: { planStart: string; checki
           <i className="swatch plan" /> Planned weight
         </span>
         <span>
-          <i className="swatch logged" /> Logged weigh-ins
+          <i className="swatch logged" /> Daily weigh-ins
+        </span>
+        <span>
+          <i className="swatch avg" /> 7-day average
         </span>
       </div>
       <p className="note">Week 18 lands on {formatPretty(addDays(planStart, 18 * 7))}.</p>

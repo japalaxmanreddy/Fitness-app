@@ -219,6 +219,25 @@ export const ANIMS: Record<string, Anim> = {
     a: pose({ h: [100, 32], s: [100, 48], p: [100, 92], e: [102, 70], w: [102, 94], k: [110, 120], f: [114, 150], k2: [92, 120], f2: [86, 150] }),
     b: pose({ h: [100, 32], s: [100, 48], p: [100, 92], e: [102, 70], w: [102, 94], k: [92, 120], f: [86, 150], k2: [110, 120], f2: [114, 150] }),
   },
+  revCrunch: {
+    ground: true,
+    a: pose({ h: [152, 136], s: [136, 142], p: [100, 146], e: [150, 154], w: [164, 154], k: [118, 118], f: [118, 96] }),
+    b: pose({ h: [152, 136], s: [136, 142], p: [108, 128], e: [150, 154], w: [164, 154], k: [96, 108], f: [86, 96] }),
+  },
+  dbCrunch: {
+    ground: true,
+    weight: true,
+    a: pose({ h: [150, 138], s: [136, 144], p: [96, 146], e: [124, 132], w: [116, 126], k: [112, 124], f: [112, 148] }),
+    b: pose({ h: [126, 112], s: [120, 126], p: [96, 144], e: [114, 114], w: [106, 108], k: [112, 124], f: [112, 148] }),
+  },
+  twist: {
+    a: pose({ h: [92, 72], s: [96, 88], p: [100, 114], e: [112, 80], w: [68, 96], k: [126, 126], f: [148, 148] }),
+    b: pose({ h: [108, 72], s: [104, 88], p: [100, 114], e: [88, 80], w: [142, 96], k: [126, 126], f: [148, 148] }),
+  },
+  captain: {
+    a: pose({ h: [100, 36], s: [100, 52], p: [100, 96], e: [78, 66], w: [70, 74], k: [104, 124], f: [104, 150] }),
+    b: pose({ h: [100, 36], s: [100, 52], p: [100, 92], e: [78, 66], w: [70, 74], k: [120, 96], f: [120, 74] }),
+  },
 };
 
 export const ANIM_KEYS = [
@@ -251,12 +270,20 @@ export const ANIM_KEYS = [
   "airHinge",
   "circles",
   "walk",
+  "revCrunch",
+  "dbCrunch",
+  "twist",
+  "captain",
 ] as const;
 
 export function animFor(name: string): string {
   const n = name.toLowerCase();
+  if (n.includes("reverse crunch")) return "revCrunch";
+  if (n.includes("weighted bench crunch") || n.includes("cable crunch")) return "dbCrunch";
+  if (n.includes("russian twist")) return "twist";
+  if (n.includes("captain")) return "captain";
   if (n.includes("arm circle")) return "circles";
-  if (n.includes("walk")) return "walk";
+  if (n.includes("walk") || n.includes("run")) return "walk";
   if (n.includes("bodyweight squat")) return "airSquat";
   if (n.includes("single-leg")) return "singleHinge";
   if (n.includes("romanian")) return "hinge";

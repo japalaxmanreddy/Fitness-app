@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { formatLong } from "./dates";
 import { Library } from "./screens/Library";
 import { Progress } from "./screens/Progress";
+import { Running } from "./screens/Running";
 import { Today } from "./screens/Today";
 import { Workouts } from "./screens/Workouts";
 import { useStore } from "./store";
@@ -11,6 +12,7 @@ import { Icon } from "./ui";
 const TABS = [
   { id: "today", label: "Today" },
   { id: "workouts", label: "Workouts" },
+  { id: "running", label: "Running" },
   { id: "library", label: "Library" },
   { id: "progress", label: "Progress" },
 ] as const;
@@ -90,6 +92,7 @@ export function App() {
       <main id="content" className="main">
         {tab === "today" ? <Today /> : null}
         {tab === "workouts" ? <Workouts /> : null}
+        {tab === "running" ? <Running /> : null}
         {tab === "library" ? <Library /> : null}
         {tab === "progress" ? <Progress /> : null}
       </main>

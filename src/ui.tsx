@@ -12,7 +12,7 @@ export function Field({
   label: string;
   value: string;
   onChange: (value: string) => void;
-  type?: "text" | "number" | "date";
+  type?: "text" | "number" | "date" | "time";
   inputMode?: "decimal" | "numeric";
   hint?: string;
 }) {
@@ -224,7 +224,7 @@ export function SetEditor({ sets, onChange }: { sets: SetLog[]; onChange: (sets:
   );
 }
 
-export function Icon({ name }: { name: "today" | "workouts" | "library" | "progress" | "sun" | "moon" }) {
+export function Icon({ name }: { name: "today" | "workouts" | "running" | "library" | "progress" | "sun" | "moon" }) {
   const props = {
     width: 22,
     height: 22,
@@ -248,6 +248,15 @@ export function Icon({ name }: { name: "today" | "workouts" | "library" | "progr
     return (
       <svg {...props}>
         <path d="M6 8h12M6 12h12M6 16h8" />
+      </svg>
+    );
+  }
+  if (name === "running") {
+    return (
+      <svg {...props}>
+        <circle cx="7" cy="6.5" r="1.6" />
+        <path d="M6.2 9.2 8.4 12l2.2-1.4 1.6 2.2" />
+        <path d="M4 17.5c2.2-3.2 4.2-3.4 6.2-.8 1.6 2.1 3.4 2.2 5.8-.2" />
       </svg>
     );
   }

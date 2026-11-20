@@ -9,6 +9,8 @@ import {
   syncIsDue,
   type DeviceLinks,
 } from "../devices";
+import { addDays, todayISO } from "../dates";
+import { mergeRuns } from "../runs";
 import { mergeSync } from "../sync-merge";
 import { useStore } from "../store";
 
@@ -16,9 +18,11 @@ const EMPTY: DeviceLinks = { withings: false, fitbit: false };
 
 export function Devices() {
   const configured = devicesConfigured();
-  const { data, setCheckins } = useStore();
+  const { data, setCheckins, setRuns } = useStore();
   const checkins = useRef(data.checkins);
   checkins.current = data.checkins;
+  const runs = useRef(data.runs);
+  runs.current = data.runs;
   const [links, setLinks] = useState<DeviceLinks>(EMPTY);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -30,6 +34,9 @@ export function Devices() {
       const payload = await syncDevices();
       setLinks(payload.connected);
       setCheckins(mergeSync(checkins.current, payload.days));
+      if (payload.connected.fitbit && payload.activities) {
+        setRuns(mergeRuns(runs.current, payload.activities, addDays(todayISO(), -29)));
+      }
       setSyncedAt(lastSyncTime());
       if (!quiet) setMessage(payload.warnings[0] || "Synced.");
       else if (payload.warnings[0]) setMessage(payload.warnings[0]);
