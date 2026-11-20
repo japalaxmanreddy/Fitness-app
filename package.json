@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "test": "node --experimental-strip-types --test src/logic.test.ts src/sync-merge.test.ts src/run-plan.test.ts worker/src/normalize.test.ts",
-    "build": "tsc --noEmit && node --experimental-strip-types --test src/logic.test.ts src/sync-merge.test.ts src/run-plan.test.ts worker/src/normalize.test.ts && vite build",
+    "test": "node --experimental-strip-types --test src/logic.test.ts src/sync-merge.test.ts src/run-plan.test.ts src/tips.test.ts worker/src/normalize.test.ts",
+    "build": "tsc --noEmit && node --experimental-strip-types --test src/logic.test.ts src/sync-merge.test.ts src/run-plan.test.ts src/tips.test.ts worker/src/normalize.test.ts && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort"
   },
   "dependencies": {

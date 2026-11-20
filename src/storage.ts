@@ -18,6 +18,7 @@ export type Profile = {
   phase: Phase;
   days: PlanDays;
   dismissedInstall: boolean;
+  goal: string;
 };
 
 export type SetLog = { weight: string; reps: string };
@@ -80,6 +81,7 @@ export function defaultProfile(today = todayISO()): Profile {
     phase: "home",
     days: "5",
     dismissedInstall: false,
+    goal: "",
   };
 }
 
@@ -194,6 +196,7 @@ export function normalize(raw: unknown): Data {
   profile.height = asString(profile.height) || fallback.profile.height;
   profile.age = asString(profile.age) || fallback.profile.age;
   profile.dismissedInstall = Boolean(profile.dismissedInstall);
+  profile.goal = asName(profile.goal);
   const checkins = Array.isArray(row.checkins) ? row.checkins.map(normalizeCheckin).filter((item): item is CheckIn => item !== null) : [];
   const workouts = Array.isArray(row.workouts) ? row.workouts.map(normalizeWorkout).filter((item): item is WorkoutLog => item !== null) : [];
   const runs = Array.isArray(row.runs) ? row.runs.map(normalizeRun).filter((item): item is RunLog => item !== null) : [];
