@@ -32,7 +32,7 @@ In the GitHub app repo, open **Settings → Secrets and variables → Actions �
 | `FITBIT_CLIENT_ID` | Fitbit app, step 3. Fitbit calls this the OAuth 2.0 Client ID |
 | `FITBIT_CLIENT_SECRET` | Fitbit app, step 3 |
 
-You can add the Cloudflare pair first, run the deploy, then add the four app secrets and run it again. Empty Withings and Fitbit secrets are skipped: the workflow still creates the KV namespace, deploys, and prints the workers.dev address.
+You can add the Cloudflare pair first, run the deploy, then add the four app secrets and run it again. Empty Withings and Fitbit secrets are skipped: the workflow still creates the KV namespace, registers a workers.dev subdomain if the account does not have one, deploys, and prints the workers.dev address.
 
 ## 1. Cloudflare
 
