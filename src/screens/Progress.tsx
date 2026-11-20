@@ -8,6 +8,7 @@ import { formatSets, setsHaveData } from "../log";
 import { useStore } from "../store";
 import { backupPayload, parseBackup } from "../storage";
 import { Devices } from "./Devices";
+import { Targets } from "./Targets";
 import { Field } from "../ui";
 
 export function Progress() {
@@ -171,6 +172,7 @@ export function Progress() {
         </ul>
       </section>
 
+      <Targets />
       <section className="card stack">
         <h2>Backup</h2>
         <p className="note">Export is a JSON file you can keep. Import replaces the logs on this phone.</p>
