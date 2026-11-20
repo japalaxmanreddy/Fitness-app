@@ -5,7 +5,7 @@ import { devicesConfigured } from "../device-config";
 import { deviceStatus, lastSyncTime, syncDevices } from "../devices";
 import { DayBody } from "../day-view";
 import { workoutRows } from "../day-plan";
-import { readProfilePhoto, saveProfilePhoto } from "../photo";
+import { readProfilePhoto, removeProfilePhoto, saveProfilePhoto } from "../photo";
 import { mergeRuns } from "../runs";
 import { SessionLogger } from "../session";
 import { useStore } from "../store";
@@ -51,6 +51,7 @@ export function Today() {
   const todayPlan = suggestedDay(plan);
   const road = absRoadmap(data.checkins, profile.planStart, today);
   const fileRef = useRef<HTMLInputElement>(null);
+  const goalRef = useRef<HTMLTextAreaElement>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState("");
   const [goal, setGoal] = useState(profile.goal || DEFAULT_GOAL);
@@ -63,6 +64,13 @@ export function Today() {
   useEffect(() => {
     void readProfilePhoto().then(setPhoto);
   }, []);
+
+  useEffect(() => {
+    const node = goalRef.current;
+    if (!node) return;
+    node.style.height = "auto";
+    node.style.height = `${node.scrollHeight}px`;
+  }, [goal]);
 
   useEffect(() => {
     if (!configured) return;
@@ -123,9 +131,26 @@ export function Today() {
   return (
     <div className="stack-lg">
       <section className="hero card">
-        <button type="button" className="avatar" onClick={() => fileRef.current?.click()} aria-label={photo ? "Change profile photo" : "Add a profile photo"}>
-          {photo ? <img src={photo} alt="" /> : <span>Photo</span>}
-        </button>
+        <div className="hero-side">
+          <button type="button" className="avatar" onClick={() => fileRef.current?.click()} aria-label="Profile photo">
+            {photo ? <img src={photo} alt="" /> : <span>Photo</span>}
+          </button>
+          <button type="button" className="btn photo-btn" onClick={() => fileRef.current?.click()}>
+            <CameraIcon />
+            {photo ? "Change photo" : "Upload photo"}
+          </button>
+          {photo ? (
+            <button
+              type="button"
+              className="link-quiet"
+              onClick={() => {
+                void removeProfilePhoto().then(() => setPhoto(null));
+              }}
+            >
+              Remove
+            </button>
+          ) : null}
+        </div>
         <input
           ref={fileRef}
           className="visually-hidden"
@@ -141,7 +166,8 @@ export function Today() {
           <label className="goal">
             <span className="visually-hidden">Goal</span>
             <textarea
-              rows={2}
+              ref={goalRef}
+              rows={1}
               maxLength={140}
               value={goal}
               onChange={(event) => setGoal(event.target.value)}
@@ -264,6 +290,15 @@ export function Today() {
         </ul>
       </section>
     </div>
+  );
+}
+
+function CameraIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+      <path d="M4 8h3.2L8.6 5.8h6.8L16.8 8H20v11H4z" strokeLinejoin="round" />
+      <circle cx="12" cy="13.2" r="3.1" />
+    </svg>
   );
 }
 
