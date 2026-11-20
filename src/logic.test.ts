@@ -11,7 +11,7 @@ import {
   matchExercise,
   planWeight,
 } from "./data.ts";
-import { dayOutline, loadsForearm } from "./day-plan.ts";
+import { dayOutline, filterLibrary, libraryEntries, loadsForearm } from "./day-plan.ts";
 import { prescribedSets } from "./log.ts";
 import { ANIM_KEYS, ANIMS, animFor } from "./motion.ts";
 import { normalize } from "./storage.ts";
@@ -164,6 +164,21 @@ describe("logging helpers", () => {
     assert.equal(data.profile.sex, "male");
     assert.equal(data.checkins[0]?.weight, "191");
     assert.equal(data.checkins[0]?.steps, "8000");
+  });
+});
+
+describe("library", () => {
+  it("puts warm-ups, strength, stretches, and movement breaks in one list", () => {
+    const entries = libraryEntries();
+    assert.equal(entries.filter((entry) => entry.group === "Warm-up").length, 3);
+    assert.equal(entries.filter((entry) => entry.group === "Strength").length, LIB.length);
+    assert.equal(entries.filter((entry) => entry.group === "Stretches").length, STRETCHES.length);
+    assert.equal(entries.filter((entry) => entry.group === "Movement breaks").length, 3);
+    const pushups = filterLibrary(entries, "Movement breaks", "push");
+    assert.equal(pushups.length, 1);
+    assert.match(pushups[0].name, /Incline push-up on dumbbell handles/);
+    assert.equal(filterLibrary(entries, "Stretches", "cat-cow")[0]?.name, "Cat-cow");
+    assert.equal(filterLibrary(entries, "Strength", "no-such-move").length, 0);
   });
 });
 

@@ -128,7 +128,7 @@ export function Progress() {
 
       <section className="card stack">
         <h2>Logged sessions</h2>
-        {workouts.length === 0 ? <p className="note">None yet. Log a session from Workouts or Exercises.</p> : null}
+        {workouts.length === 0 ? <p className="note">None yet. Log a session from Workouts.</p> : null}
         <ul className="history">
           {workouts.slice(0, 20).map((workout) => (
             <li key={workout.id}>

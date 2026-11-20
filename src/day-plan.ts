@@ -152,6 +152,48 @@ function snacks(): DayMove[] {
   ];
 }
 
+export type LibraryGroup = "All" | "Warm-up" | "Strength" | "Stretches" | "Movement breaks";
+
+export type LibraryEntry = DayMove & { group: Exclude<LibraryGroup, "All"> };
+
+export const LIBRARY_GROUPS: LibraryGroup[] = ["All", "Warm-up", "Strength", "Stretches", "Movement breaks"];
+
+export function libraryEntries(): LibraryEntry[] {
+  const strength: LibraryEntry[] = LIB.map((exercise) => ({
+    name: exercise.name,
+    prescription: exercise.muscles,
+    cue: exercise.cue,
+    videoUrl: exercise.videoUrl,
+    videoSite: exercise.videoSite,
+    forearm: loadsForearm(exercise.name),
+    group: "Strength",
+  }));
+  const stretches: LibraryEntry[] = STRETCHES.map((stretch) => ({
+    name: stretch.name,
+    prescription: stretch.hold,
+    cue: stretch.cue,
+    videoUrl: stretch.videoUrl,
+    videoSite: stretch.videoSite,
+    forearm: loadsForearm(stretch.name),
+    group: "Stretches",
+  }));
+  return [
+    ...WARMUP.map((move) => ({ ...move, group: "Warm-up" as const })),
+    ...strength,
+    ...stretches,
+    ...snacks().map((move) => ({ ...move, group: "Movement breaks" as const })),
+  ];
+}
+
+export function filterLibrary(entries: LibraryEntry[], group: LibraryGroup, query: string): LibraryEntry[] {
+  const needle = query.trim().toLowerCase();
+  return entries.filter((entry) => {
+    if (group !== "All" && entry.group !== group) return false;
+    if (!needle) return true;
+    return `${entry.name} ${entry.cue} ${entry.prescription}`.toLowerCase().includes(needle);
+  });
+}
+
 export function dayOutline(day: PlanDay): DayOutline {
   const rows = workoutRows(day);
   return {

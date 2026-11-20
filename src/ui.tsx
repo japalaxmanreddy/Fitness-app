@@ -66,15 +66,18 @@ export function Segmented<T extends string>({
   onChange,
   options,
   columns,
+  wrap,
 }: {
   label: string;
   value: T;
   onChange: (value: T) => void;
   options: { value: T; label: string }[];
   columns?: boolean;
+  wrap?: boolean;
 }) {
+  const layout = columns ? "seg seg-col" : wrap ? "seg seg-wrap" : "seg";
   return (
-    <div className={columns ? "seg seg-col" : "seg"} role="group" aria-label={label}>
+    <div className={layout} role="group" aria-label={label}>
       {options.map((option) => (
         <button key={option.value} type="button" aria-pressed={option.value === value} onClick={() => onChange(option.value)}>
           {option.label}
@@ -221,7 +224,7 @@ export function SetEditor({ sets, onChange }: { sets: SetLog[]; onChange: (sets:
   );
 }
 
-export function Icon({ name }: { name: "today" | "workouts" | "exercises" | "stretch" | "progress" | "sun" | "moon" }) {
+export function Icon({ name }: { name: "today" | "workouts" | "library" | "progress" | "sun" | "moon" }) {
   const props = {
     width: 22,
     height: 22,
@@ -248,19 +251,11 @@ export function Icon({ name }: { name: "today" | "workouts" | "exercises" | "str
       </svg>
     );
   }
-  if (name === "exercises") {
+  if (name === "library") {
     return (
       <svg {...props}>
-        <circle cx="12" cy="5" r="1.6" fill="currentColor" stroke="none" />
-        <path d="M12 7.2v5.2M8.2 10.2h7.6M12 12.4l-2.4 6M12 12.4l2.4 6" />
-      </svg>
-    );
-  }
-  if (name === "stretch") {
-    return (
-      <svg {...props}>
-        <circle cx="8" cy="6" r="1.6" fill="currentColor" stroke="none" />
-        <path d="M8 8.2v4.2l6 2.2M8 10.5h5.5M8 12.4l-1.5 6M8 12.4l3 5.6" />
+        <path d="M5 5.5h5.5v13H5zM13.5 5.5H19v13h-5.5" />
+        <path d="M7.2 8.5h1.4M15.4 8.5h1.4" />
       </svg>
     );
   }

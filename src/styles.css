@@ -207,6 +207,8 @@ h3 { font-size: 0.98rem; letter-spacing: -0.01em; }
 }
 .seg-col { flex-direction: column; }
 .seg-col button { width: 100%; }
+.seg-wrap { flex-wrap: wrap; }
+.seg-wrap button { flex: 1 1 auto; }
 
 .btn, .text-btn, .icon-x { touch-action: manipulation; }
 .btn {
