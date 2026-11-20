@@ -19,6 +19,7 @@ type Store = {
   upsertWorkout: (workout: WorkoutLog) => void;
   removeWorkout: (id: string) => void;
   replaceAll: (data: Data) => void;
+  setCheckins: (checkins: CheckIn[]) => void;
 };
 
 const StoreContext = createContext<Store | null>(null);
@@ -88,6 +89,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [commit],
   );
 
+  const setCheckins = useCallback(
+    (checkins: CheckIn[]) => {
+      setData((prev) => commit({ ...prev, checkins }));
+    },
+    [commit],
+  );
+
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (event.key !== STORAGE_KEY || !event.newValue) return;
@@ -102,8 +110,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ data, saveError, setProfile, upsertCheckin, removeCheckin, upsertWorkout, removeWorkout, replaceAll }),
-    [data, saveError, setProfile, upsertCheckin, removeCheckin, upsertWorkout, removeWorkout, replaceAll],
+    () => ({ data, saveError, setProfile, upsertCheckin, removeCheckin, upsertWorkout, removeWorkout, replaceAll, setCheckins }),
+    [data, saveError, setProfile, upsertCheckin, removeCheckin, upsertWorkout, removeWorkout, replaceAll, setCheckins],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

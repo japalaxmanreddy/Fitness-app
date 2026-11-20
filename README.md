@@ -17,6 +17,8 @@ https://japalaxmanreddy.github.io/Fitness-app/
 
 Each exercise and stretch has a `videoUrl`. Watch how-to opens that video on YouTube, outside the app, so it plays in Safari or the YouTube app.
 
+Withings and Fitbit stay hidden until a Worker address is set. The iPhone steps are in [docs/DEVICE-SETUP.md](docs/DEVICE-SETUP.md).
+
 ## iPhone
 
 Open the site in Safari, tap Share, then Add to Home Screen. The icon opens full screen, without the Safari toolbar. The first online visit caches the app so later visits work offline.
